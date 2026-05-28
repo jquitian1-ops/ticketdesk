@@ -15,11 +15,13 @@ from src.models import Base
 def test_engine():
     """Create test database engine (SQLite in memory for CI/local testing)"""
     # Use SQLite in memory for testing (no external dependencies)
+    # Session-scoped to persist database across all tests
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
-        echo=False
+        echo=False,
+        isolation_level="SERIALIZABLE"
     )
 
     # Enable foreign keys in SQLite
@@ -66,7 +68,7 @@ def test_engine():
                 account_id TEXT NOT NULL,
                 candidate_email TEXT NOT NULL,
                 status TEXT NOT NULL DEFAULT 'pending',
-                metadata TEXT DEFAULT '{}',
+                session_data TEXT DEFAULT '{}',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 deleted_at TIMESTAMP,
@@ -111,6 +113,8 @@ def db_session(test_engine):
 
     yield session
 
+    # Clear the session but don't rollback - persist data across tests
+    session.expunge_all()
     session.close()
 
 
