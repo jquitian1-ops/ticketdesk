@@ -1,0 +1,376 @@
+---
+# Linear Publishing Configuration
+# Maps TicketDesk Enterprise tasks to Linear issues
+
+publish:
+  workspace: "ticketdesk"
+  team: "engineering"
+  cycle: "TicketDesk Enterprise v1.0"
+  status: "ready-to-publish"
+
+mapping:
+  # MILESTONE M1: Unit 1 + Unit 6
+  M1:
+    linearMilestone: "v0.1.0 (Auth & Compliance)"
+    startDate: "2026-05-27"
+    targetDate: "2026-05-31"
+    owner: "ENGINEER-1, ENGINEER-2"
+
+  # Task T1.1: Database Schema
+  T1.1:
+    linearStatus: "Todo"
+    title: "[T1.1] Database Schema (Unit 1)"
+    description: "Create PostgreSQL schema with users, roles, sessions, audit_logs tables"
+    milestone: "v0.1.0"
+    assignee: "ENGINEER-1"
+    priority: "Urgent"  # Linear critical → Urgent
+    estimate: 8
+    dueDate: "2026-05-28"
+    blockers: []
+    blocks: ["T1.2", "T1.5"]
+    labels: ["unit-1", "backend", "database", "critical"]
+    linkedDocs:
+      - "DESIGN.md#unit-1"
+      - "HARNESS-SPECIFICATION.md"
+      - "docs/tasks/001-T1.1-database-schema.md"
+
+  # Task T1.2: User Aggregate
+  T1.2:
+    linearStatus: "Todo"
+    title: "[T1.2] User Aggregate + Repository (Unit 1)"
+    description: "Implement User aggregate with validation, password hashing, and UserRepository pattern"
+    milestone: "v0.1.0"
+    assignee: "ENGINEER-1"
+    priority: "Urgent"
+    estimate: 12
+    dueDate: "2026-05-29"
+    blockers: ["T1.1"]
+    blocks: ["T1.3", "T1.4"]
+    labels: ["unit-1", "backend", "aggregate", "critical"]
+
+  # Task T1.3: Authentication Service
+  T1.3:
+    linearStatus: "Todo"
+    title: "[T1.3] Authentication Service (JWT RS256) (Unit 1)"
+    description: "JWT RS256 token generation, validation, refresh token rotation"
+    milestone: "v0.1.0"
+    assignee: "ENGINEER-1"
+    priority: "Urgent"
+    estimate: 10
+    dueDate: "2026-05-30"
+    blockers: ["T1.2"]
+    blocks: ["T1.4"]
+    labels: ["unit-1", "backend", "security", "critical"]
+
+  # Task T1.4: RBAC
+  T1.4:
+    linearStatus: "Todo"
+    title: "[T1.4] RBAC (Role-Based Access Control) (Unit 1)"
+    description: "Implement @require_role decorator for 3 roles (admin, recruiter, candidate)"
+    milestone: "v0.1.0"
+    assignee: "ENGINEER-1"
+    priority: "High"
+    estimate: 8
+    dueDate: "2026-05-31"
+    blockers: ["T1.2", "T1.3"]
+    blocks: []
+    labels: ["unit-1", "backend", "security"]
+
+  # Task T1.5: Audit Logging
+  T1.5:
+    linearStatus: "Todo"
+    title: "[T1.5] Audit Logging Framework (Unit 6)"
+    description: "AuditLog aggregate, middleware, LGPD compliance, soft-delete handler"
+    milestone: "v0.1.0"
+    assignee: "ENGINEER-1"
+    priority: "High"
+    estimate: 10
+    dueDate: "2026-05-31"
+    blockers: ["T1.1"]
+    blocks: []
+    labels: ["unit-6", "backend", "compliance", "lgpd"]
+
+  # Task T1.6: Docker Setup
+  T1.6:
+    linearStatus: "Todo"
+    title: "[T1.6] Docker Setup + CI/CD Pipeline"
+    description: "Dockerfile, docker-compose.yml, GitHub Actions 6-stage pipeline"
+    milestone: "v0.1.0"
+    assignee: "ENGINEER-2"
+    priority: "Urgent"
+    estimate: 12
+    dueDate: "2026-05-30"
+    blockers: []
+    blocks: ["T2.1"]
+    labels: ["devops", "infrastructure", "ci-cd", "critical"]
+
+  # MILESTONE M2: Unit 2
+  M2:
+    linearMilestone: "v0.2.0 (Session Management)"
+    startDate: "2026-06-03"
+    targetDate: "2026-06-07"
+    owner: "ENGINEER-1, QA"
+
+  # Task T2.1: Session Schema
+  T2.1:
+    linearStatus: "Todo"
+    title: "[T2.1] Session Schema + Migration (Unit 2)"
+    description: "Create sessions table with soft-delete for LGPD compliance"
+    milestone: "v0.2.0"
+    assignee: "ENGINEER-1"
+    priority: "Urgent"
+    estimate: 6
+    dueDate: "2026-06-03"
+    blockers: ["T1.6"]
+    blocks: ["T2.2"]
+    labels: ["unit-2", "backend", "database"]
+
+  # Task T2.2: Session Aggregate
+  T2.2:
+    linearStatus: "Todo"
+    title: "[T2.2] Session Aggregate (Unit 2)"
+    description: "Session class with state machine, message handling, validation"
+    milestone: "v0.2.0"
+    assignee: "ENGINEER-1"
+    priority: "Urgent"
+    estimate: 12
+    dueDate: "2026-06-04"
+    blockers: ["T2.1"]
+    blocks: ["T2.3"]
+    labels: ["unit-2", "backend", "aggregate"]
+
+  # Task T2.3: Session Repository
+  T2.3:
+    linearStatus: "Todo"
+    title: "[T2.3] SessionRepository + Service Layer (Unit 2)"
+    description: "Repository pattern with SQLAlchemy, business logic service"
+    milestone: "v0.2.0"
+    assignee: "ENGINEER-1"
+    priority: "Urgent"
+    estimate: 10
+    dueDate: "2026-06-05"
+    blockers: ["T2.2"]
+    blocks: ["T2.4"]
+    labels: ["unit-2", "backend", "repository"]
+
+  # Task T2.4: Session Endpoints
+  T2.4:
+    linearStatus: "Todo"
+    title: "[T2.4] Session API Endpoints (Unit 2)"
+    description: "REST endpoints: POST/GET/DELETE /api/sessions"
+    milestone: "v0.2.0"
+    assignee: "ENGINEER-1"
+    priority: "Urgent"
+    estimate: 8
+    dueDate: "2026-06-06"
+    blockers: ["T2.3"]
+    blocks: ["T2.5"]
+    labels: ["unit-2", "backend", "api"]
+
+  # Task T2.5: Unit 2 Tests
+  T2.5:
+    linearStatus: "Todo"
+    title: "[T2.5] Comprehensive Test Suite (Unit 2)"
+    description: "48+ unit + integration tests, 92% coverage, security validation"
+    milestone: "v0.2.0"
+    assignee: "QA"
+    priority: "High"
+    estimate: 8
+    dueDate: "2026-06-07"
+    blockers: ["T2.4"]
+    blocks: []
+    labels: ["unit-2", "testing", "qa"]
+
+  # MILESTONE M3: Unit 3 + Unit 4
+  M3:
+    linearMilestone: "v0.3.0 (BotEngine & Evaluation)"
+    startDate: "2026-06-10"
+    targetDate: "2026-06-16"
+    owner: "ENGINEER-1, QA"
+
+  # Task T3.1: Claude Client
+  T3.1:
+    linearStatus: "Todo"
+    title: "[T3.1] BotEngine: Claude API Client (Unit 3)"
+    description: "Claude API integration with SSE streaming, token budget tracking"
+    milestone: "v0.3.0"
+    assignee: "ENGINEER-1"
+    priority: "Urgent"
+    estimate: 10
+    dueDate: "2026-06-10"
+    blockers: ["T2.5"]
+    blocks: ["T3.2", "T3.4"]
+    labels: ["unit-3", "backend", "ai", "claude-api"]
+
+  # Task T3.2: Jailbreak Detection
+  T3.2:
+    linearStatus: "Todo"
+    title: "[T3.2] Jailbreak Detection (Unit 3)"
+    description: "Regex-based detection >95% accuracy, <100ms latency"
+    milestone: "v0.3.0"
+    assignee: "ENGINEER-1"
+    priority: "High"
+    estimate: 8
+    dueDate: "2026-06-11"
+    blockers: ["T3.1"]
+    blocks: []
+    labels: ["unit-3", "backend", "security"]
+
+  # Task T3.3: Evaluation Engine
+  T3.3:
+    linearStatus: "Todo"
+    title: "[T3.3] Evaluation Engine + Scoring (Unit 4)"
+    description: "Scoring algorithm, decision logic (HIRE/MAYBE/REJECT), citation extraction"
+    milestone: "v0.3.0"
+    assignee: "ENGINEER-1"
+    priority: "Urgent"
+    estimate: 12
+    dueDate: "2026-06-13"
+    blockers: ["T3.1"]
+    blocks: ["T3.4"]
+    labels: ["unit-4", "backend", "evaluation"]
+
+  # Task T3.4: Integration
+  T3.4:
+    linearStatus: "Todo"
+    title: "[T3.4] Integration: Unit 2 + 3 + 4 (BotEngine Flow)"
+    description: "End-to-end session → Claude → evaluation flow"
+    milestone: "v0.3.0"
+    assignee: "ENGINEER-1"
+    priority: "Urgent"
+    estimate: 6
+    dueDate: "2026-06-14"
+    blockers: ["T3.1", "T3.3"]
+    blocks: []
+    labels: ["unit-3", "unit-4", "integration"]
+
+  # MILESTONE M4: Unit 5 + E2E + Production
+  M4:
+    linearMilestone: "v1.0.0 (Production Ready)"
+    startDate: "2026-06-17"
+    targetDate: "2026-06-23"
+    owner: "ENGINEER-2, QA, ORCHESTRATOR"
+
+  # Task T4.1: Frontend Setup
+  T4.1:
+    linearStatus: "Todo"
+    title: "[T4.1] Frontend Setup + Layout (Unit 5)"
+    description: "Next.js 14, TypeScript, Zustand state management, app router"
+    milestone: "v1.0.0"
+    assignee: "ENGINEER-2"
+    priority: "Urgent"
+    estimate: 8
+    dueDate: "2026-06-17"
+    blockers: ["T3.4"]
+    blocks: ["T4.2", "T4.3"]
+    labels: ["unit-5", "frontend", "nextjs"]
+
+  # Task T4.2: Candidate Chat
+  T4.2:
+    linearStatus: "Todo"
+    title: "[T4.2] Candidate Interview Component (Unit 5)"
+    description: "Chat UI with SSE streaming, message history, typing indicators"
+    milestone: "v1.0.0"
+    assignee: "ENGINEER-2"
+    priority: "Urgent"
+    estimate: 10
+    dueDate: "2026-06-19"
+    blockers: ["T4.1", "T3.4"]
+    blocks: ["T4.4"]
+    labels: ["unit-5", "frontend", "component"]
+
+  # Task T4.3: Recruiter Dashboard
+  T4.3:
+    linearStatus: "Todo"
+    title: "[T4.3] Recruiter Dashboard (Unit 5)"
+    description: "Queue list, filtering, search, evaluation modal"
+    milestone: "v1.0.0"
+    assignee: "ENGINEER-2"
+    priority: "Urgent"
+    estimate: 10
+    dueDate: "2026-06-19"
+    blockers: ["T4.1", "T3.4"]
+    blocks: ["T4.4"]
+    labels: ["unit-5", "frontend", "component"]
+
+  # Task T4.4: E2E Tests
+  T4.4:
+    linearStatus: "Todo"
+    title: "[T4.4] E2E Testing (Playwright) (Unit 5)"
+    description: "25+ scenarios covering critical flows, no flakiness"
+    milestone: "v1.0.0"
+    assignee: "QA"
+    priority: "High"
+    estimate: 12
+    dueDate: "2026-06-21"
+    blockers: ["T4.2", "T4.3"]
+    blocks: ["T4.5"]
+    labels: ["unit-5", "testing", "e2e"]
+
+  # Task T4.5: Prod Deployment
+  T4.5:
+    linearStatus: "Todo"
+    title: "[T4.5] Production Deployment + Monitoring"
+    description: "Terraform infrastructure, ECS, CloudWatch, on-call setup"
+    milestone: "v1.0.0"
+    assignee: "ORCHESTRATOR"
+    priority: "Urgent"
+    estimate: 8
+    dueDate: "2026-06-23"
+    blockers: ["T4.4"]
+    blocks: []
+    labels: ["devops", "infrastructure", "production"]
+
+# Conversion rules
+conversionRules:
+  priority:
+    critical: "Urgent"
+    high: "High"
+    medium: "Medium"
+    low: "Low"
+
+  status:
+    pending: "Todo"
+    in_progress: "In Progress"
+    blocked: "Blocked"
+    ready_for_review: "In Review"
+    approved: "Done"
+
+  cycleName: "TicketDesk Enterprise v1.0"
+
+# Validation checklist
+validation:
+  - [ ] All 20 tasks have Linear equivalent
+  - [ ] Blockers/blocks relationships match task-package.yaml
+  - [ ] All milestones have target dates
+  - [ ] All tasks have estimates
+  - [ ] No circular dependencies
+  - [ ] Dry-run executed without errors
+  - [ ] Issues created in Linear (status: Todo)
+
+# Dry-run command
+dryRun: |
+  convert-tasks-to-linear \
+    --config docs/tasks/linear-publish.yaml \
+    --dry-run \
+    --output docs/tasks/linear-publish-preview.json
+
+# Publish command
+publish: |
+  convert-tasks-to-linear \
+    --config docs/tasks/linear-publish.yaml \
+    --execute \
+    --output docs/tasks/linear-publish-results.json
+
+---
+
+# Expected Output (Post-Publish)
+
+publishResults:
+  workspace: "ticketdesk"
+  team: "engineering"
+  issuesCreated: 20
+  milestonesCreated: 4
+  blockerRelationshipsCreated: 18
+  status: "success"
+  timestamp: "2026-05-27T14:30:00Z"

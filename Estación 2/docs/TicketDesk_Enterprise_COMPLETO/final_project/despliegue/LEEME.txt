@@ -1,0 +1,88 @@
+╔══════════════════════════════════════════════════════════════════╗
+║         TicketDesk — Manufacturas Eliot                        ║
+║         Sistema de Gestión de Incidencias TI v2.0              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+ARCHIVOS DEL PROYECTO
+──────────────────────────────────────────────────────────────────
+
+SISTEMA PRINCIPAL
+  gestion_tickets_v2.html    ← Abrir con doble clic (técnicos TI)
+  portal_usuarios.html       ← Portal para usuarios finales
+
+BACKEND (modo equipo en red)
+  ldap_bridge.py             ← Servidor API REST + JWT + LDAP
+  teams_integration.py       ← Notificaciones Microsoft Teams
+  users.json                 ← Usuarios locales (admin incluido)
+  .env.template              ← Copiar a .env y completar
+
+DOCUMENTACIÓN
+  Manual_TicketDesk_Manufacturas_Eliot.docx  ← Manual completo
+
+──────────────────────────────────────────────────────────────────
+CREDENCIALES DE ACCESO
+──────────────────────────────────────────────────────────────────
+
+  Usuario administrador : admin
+  Contraseña            : FfSEN/Y7W06#7Wod
+  Rol                   : Administrador (acceso completo)
+
+  ⚠ Cambiar la contraseña después del primer acceso.
+
+──────────────────────────────────────────────────────────────────
+INICIO RÁPIDO — MODO INDIVIDUAL
+──────────────────────────────────────────────────────────────────
+
+  1. Abrir gestion_tickets_v2.html en Chrome o Edge
+  2. Iniciar sesión con admin / FfSEN/Y7W06#7Wod
+  3. Listo — los datos se guardan automáticamente
+
+──────────────────────────────────────────────────────────────────
+INICIO RÁPIDO — MODO EQUIPO (varios usuarios en red)
+──────────────────────────────────────────────────────────────────
+
+  1. Instalar dependencias:
+     pip install flask flask-cors ldap3 python-dotenv
+
+  2. Configurar entorno:
+     copy .env.template .env
+     (editar .env con los datos del servidor LDAP y API key)
+
+  3. Iniciar servidor:
+     python ldap_bridge.py
+
+  4. Todos los usuarios abren en su navegador:
+     http://IP-DEL-SERVIDOR:5050          (técnicos)
+     http://IP-DEL-SERVIDOR:5050/portal   (usuarios finales)
+
+──────────────────────────────────────────────────────────────────
+FUNCIONES PRINCIPALES
+──────────────────────────────────────────────────────────────────
+
+  ✔ Dashboard con estadísticas en tiempo real
+  ✔ Gestión de tickets con SLA y escalación automática
+  ✔ Kanban, métricas y reportes
+  ✔ Asignación automática con Inteligencia Artificial
+  ✔ Plantillas de tickets (8 predefinidas)
+  ✔ Time tracking por ticket
+  ✔ Tags con colores personalizables
+  ✔ Clonar tickets e imprimir con QR
+  ✔ Encuesta de satisfacción
+  ✔ Chat interno (4 canales)
+  ✔ Monitor de conectividad (tickets automáticos)
+  ✔ Escalación automática 3 niveles
+  ✔ Búsqueda global Ctrl+K
+  ✔ Exportar Excel y CSV
+  ✔ Notificaciones push del navegador
+  ✔ Integración Microsoft Teams
+  ✔ Login JWT + LDAP/Active Directory
+  ✔ Portal de autoservicio para usuarios finales
+  ✔ Seguridad: XSS, CSP, rate limiting, PBKDF2
+
+──────────────────────────────────────────────────────────────────
+SOPORTE
+──────────────────────────────────────────────────────────────────
+
+  Área TI Manufacturas Eliot
+  soporte@manufacturaseliiot.com
+

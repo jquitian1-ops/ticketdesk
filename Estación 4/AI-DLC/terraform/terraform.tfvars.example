@@ -1,0 +1,25 @@
+﻿# Copy this file to terraform.tfvars and fill in your values
+# terraform.tfvars is GITIGNORED for security
+
+aws_region   = "us-south-1"
+environment  = "production"
+project_name = "ticketdesk"
+
+vpc_cidr           = "10.0.0.0/16"
+availability_zones = ["us-south-1a", "us-south-1b"]
+
+db_instance_class      = "db.t3.small"
+rds_allocated_storage  = 100
+database_name          = "ticketdesk"
+database_username      = "postgres"  # Change in production
+
+redis_node_type = "cache.t3.micro"
+
+certificate_arn = "arn:aws:acm:us-south-1:ACCOUNT_ID:certificate/xxxxx"
+
+backend_image  = "ACCOUNT_ID.dkr.ecr.us-south-1.amazonaws.com/ticketdesk-backend:latest"
+frontend_image = "ACCOUNT_ID.dkr.ecr.us-south-1.amazonaws.com/ticketdesk-frontend:latest"
+
+log_retention_days = 30
+
+hosted_zone_name = "ticketdesk.com"

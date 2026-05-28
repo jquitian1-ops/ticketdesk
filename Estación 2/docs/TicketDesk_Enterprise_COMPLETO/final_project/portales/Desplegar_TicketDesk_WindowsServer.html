@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TicketDesk Enterprise — Guía de Despliegue Windows Server</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0d0c0a;
+  --surface:   #141210;
+  --card:      #1a1815;
+  --border:    #2a2724;
+  --border2:   #383330;
+  --orange:    #d4500a;
+  --orange2:   #f06020;
+  --orange-l:  rgba(212,80,10,.12);
+  --orange-ll: rgba(212,80,10,.06);
+  --text:      #f0ede8;
+  --text2:     #9b9590;
+  --text3:     #5c5752;
+  --green:     #2a9d5c;
+  --green-l:   rgba(42,157,92,.12);
+  --blue:      #3a8fd4;
+  --blue-l:    rgba(58,143,212,.10);
+  --yellow:    #d4a017;
+  --yellow-l:  rgba(212,160,23,.10);
+  --red:       #c0392b;
+  --red-l:     rgba(192,57,43,.10);
+  --mono:      'JetBrains Mono', monospace;
+  --sans:      'Syne', sans-serif;
+  --r:         8px;
+  --rl:        12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+
+/* ── HEADER ── */
+.header{background:linear-gradient(135deg,#1a0f08 0%,#0d0c0a 60%);border-bottom:1px solid var(--border);padding:0;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+.header-inner{max-width:1100px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:16px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px}
+.logo-text{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.02em}
+.logo-text span{color:var(--orange)}
+.header-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--orange-l);color:var(--orange);border:1px solid rgba(212,80,10,.3);font-weight:600;letter-spacing:.06em}
+.progress-bar{height:2px;background:var(--border);position:relative;overflow:hidden;margin-left:auto;width:200px;border-radius:2px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:2px;transition:width .4s ease;width:0%}
+.progress-lbl{font-size:11px;color:var(--text3);margin-left:8px;min-width:32px}
+
+/* ── LAYOUT ── */
+.layout{max-width:1100px;margin:0 auto;padding:40px 32px;display:grid;grid-template-columns:220px 1fr;gap:32px;align-items:start}
+@media(max-width:768px){.layout{grid-template-columns:1fr;padding:20px 16px}.sidebar-nav{display:none}}
+
+/* ── SIDEBAR ── */
+.sidebar-nav{position:sticky;top:80px}
+.nav-section{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin:20px 0 8px;padding:0 12px}
+.nav-section:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r);cursor:pointer;transition:all .15s;text-decoration:none;color:var(--text2);font-size:13px;font-weight:500;border:1px solid transparent}
+.nav-item:hover{background:var(--card);color:var(--text)}
+.nav-item.active{background:var(--orange-l);color:var(--orange);border-color:rgba(212,80,10,.25)}
+.nav-item.done .nav-num{background:var(--green);color:#fff;border-color:var(--green)}
+.nav-item.active .nav-num{background:var(--orange);color:#fff;border-color:var(--orange)}
+.nav-num{width:22px;height:22px;border-radius:50%;background:var(--border);color:var(--text3);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border2);transition:all .15s;font-family:var(--mono)}
+.nav-check{color:var(--green);font-size:14px;margin-left:auto}
+
+/* ── MAIN CONTENT ── */
+.main{min-width:0}
+
+/* ── HERO ── */
+.hero{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:32px;margin-bottom:32px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(212,80,10,.15) 0%,transparent 70%);pointer-events:none}
+.hero-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.03em;margin-bottom:8px;line-height:1.2}
+.hero-title span{color:var(--orange)}
+.hero-sub{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.hstat{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px}
+.hstat-v{font-size:20px;font-weight:800;color:var(--orange);font-family:var(--mono)}
+.hstat-l{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ── IP CONFIG ── */
+.ip-config{background:var(--card);border:1px solid var(--orange);border-radius:var(--rl);padding:20px;margin-bottom:32px;position:relative}
+.ip-config-title{font-size:13px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ip-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ip-field label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px}
+.ip-field input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;transition:border-color .15s}
+.ip-field input:focus{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-ll)}
+.ip-note{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6}
+.ip-note span{color:var(--orange);font-family:var(--mono)}
+
+/* ── STEPS ── */
+.step{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:16px;overflow:hidden;transition:border-color .2s}
+.step.active{border-color:var(--orange)}
+.step.done{border-color:var(--green)}
+.step-header{padding:18px 20px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:background .15s;user-select:none}
+.step-header:hover{background:rgba(255,255,255,.02)}
+.step-badge{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;font-family:var(--mono);flex-shrink:0;transition:all .2s;border:2px solid var(--border2);background:var(--bg);color:var(--text3)}
+.step.active .step-badge{background:var(--orange-l);border-color:var(--orange);color:var(--orange)}
+.step.done .step-badge{background:var(--green-l);border-color:var(--green);color:var(--green)}
+.step-info{flex:1}
+.step-title{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.step-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.step-toggle{color:var(--text3);font-size:18px;transition:transform .25s;line-height:1}
+.step.open .step-toggle{transform:rotate(180deg)}
+.step-body{display:none;padding:0 20px 20px;border-top:1px solid var(--border)}
+.step.open .step-body{display:block}
+.step-done-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--green-l);color:var(--green);border:1px solid rgba(42,157,92,.25);font-weight:600;margin-left:auto;margin-right:8px}
+
+/* ── CODE BLOCKS ── */
+.code-block{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);margin:12px 0;overflow:hidden}
+.code-header{padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.code-lang{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono)}
+.code-copy{font-size:11px;color:var(--text3);cursor:pointer;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;font-family:var(--sans);transition:all .12s}
+.code-copy:hover{background:var(--orange-l);color:var(--orange);border-color:rgba(212,80,10,.3)}
+.code-copy.copied{color:var(--green);border-color:rgba(42,157,92,.3);background:var(--green-l)}
+code, pre{font-family:var(--mono);font-size:13px}
+pre{padding:14px;overflow-x:auto;line-height:1.7;color:var(--text2)}
+pre .cmd{color:#f0ede8}
+pre .comment{color:#5c5752}
+pre .key{color:var(--orange)}
+pre .val{color:#2a9d5c}
+pre .path{color:#3a8fd4}
+pre .tree-item{color:var(--text2)}
+
+/* ── INLINE CODE ── */
+code.inline{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-size:12px;color:var(--orange2)}
+
+/* ── ALERTS ── */
+.alert{border-radius:var(--r);padding:12px 14px;margin:12px 0;font-size:13px;line-height:1.6;border-left:3px solid;display:flex;gap:10px;align-items:flex-start}
+.alert-icon{flex-shrink:0;margin-top:1px;font-size:16px}
+.alert.warn{background:var(--yellow-l);border-color:var(--yellow);color:#d4a017}
+.alert.info{background:var(--blue-l);border-color:var(--blue);color:#7ab8e8}
+.alert.ok{background:var(--green-l);border-color:var(--green);color:#4ec989}
+.alert.danger{background:var(--red-l);border-color:var(--red);color:#e06b5a}
+.alert strong{font-weight:700}
+
+/* ── LISTS ── */
+.step-body ul,.step-body ol{padding-left:20px;margin:10px 0}
+.step-body li{margin-bottom:6px;font-size:13px;color:var(--text2);line-height:1.6}
+.step-body li strong{color:var(--text);font-weight:600}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--surface);color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:9px 12px;text-align:left;border-bottom:1px solid var(--border2)}
+td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text2);line-height:1.5}
+tr:last-child td{border-bottom:none}
+td code.inline{font-size:11px}
+
+/* ── STEP CHECK BUTTON ── */
+.check-btn{display:flex;align-items:center;gap:8px;margin-top:16px;padding:10px 16px;background:var(--orange-l);border:1px solid rgba(212,80,10,.3);border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:600;color:var(--orange);font-family:var(--sans);width:100%;transition:all .15s}
+.check-btn:hover{background:rgba(212,80,10,.2)}
+.check-btn.done{background:var(--green-l);border-color:rgba(42,157,92,.3);color:var(--green)}
+.check-icon{font-size:18px}
+
+/* ── ARCHITECTURE DIAGRAM ── */
+.arch{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:20px;margin:12px 0;font-family:var(--mono);font-size:12px;color:var(--text2);overflow-x:auto}
+.arch-row{display:flex;align-items:center;gap:0;margin:4px 0;white-space:nowrap}
+.arch-box{background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600}
+.arch-box.orange{border-color:rgba(212,80,10,.4);color:var(--orange);background:var(--orange-ll)}
+.arch-box.green{border-color:rgba(42,157,92,.4);color:var(--green);background:var(--green-l)}
+.arch-box.blue{border-color:rgba(58,143,212,.4);color:var(--blue);background:var(--blue-l)}
+.arch-arrow{color:var(--text3);padding:0 8px;font-size:16px}
+
+/* ── FINAL CHECKLIST ── */
+.checklist{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:20px;margin-top:32px}
+.checklist-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:14px;letter-spacing:-.02em}
+.check-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .15s}
+.check-item:last-child{border-bottom:none}
+.check-item:hover{opacity:.85}
+.check-box{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;background:var(--bg)}
+.check-box.checked{background:var(--green);border-color:var(--green);color:#fff;font-size:12px}
+.check-item-text{font-size:13px;color:var(--text2)}
+.check-item.checked .check-item-text{text-decoration:line-through;color:var(--text3)}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.step-body{animation:fadeIn .2s ease}
+.step:not(.open) .step-body{animation:none}
+
+/* ── URL CHIP ── */
+.url-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:12px;color:var(--blue);cursor:pointer;transition:all .12s}
+.url-chip:hover{border-color:var(--blue);background:var(--blue-l)}
+.url-chip::before{content:'⎘';font-size:12px;color:var(--text3)}
+
+/* ── TOOLTIP ── */
+.tooltip-wrap{position:relative;display:inline-block}
+.tooltip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1815;border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text2);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:10}
+.tooltip-wrap:hover .tooltip{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <svg class="logo-icon" viewBox="0 0 120 120" fill="none">
+        <polygon points="60,4 104,4 126,42 104,80 60,80 38,42" fill="#d4500a"/>
+        <circle cx="82" cy="42" r="14" fill="#1a1917"/>
+        <circle cx="82" cy="42" r="7" fill="#d4500a"/>
+      </svg>
+      <span class="logo-text">Ticket<span>Desk</span> Enterprise</span>
+    </div>
+    <span class="header-badge">WINDOWS SERVER</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <span class="progress-lbl" id="progress-lbl">0%</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar-nav">
+  <div class="nav-section">Configuración</div>
+  <div class="nav-item active" id="nav-0" onclick="scrollToStep(0)">
+    <span class="nav-num" id="num-0">0</span> IP del servidor
+  </div>
+  <div class="nav-section">Instalación</div>
+  <div class="nav-item" id="nav-1" onclick="scrollToStep(1)">
+    <span class="nav-num" id="num-1">1</span> Python 3.11
+  </div>
+  <div class="nav-item" id="nav-2" onclick="scrollToStep(2)">
+    <span class="nav-num" id="num-2">2</span> Carpeta del sistema
+  </div>
+  <div class="nav-item" id="nav-3" onclick="scrollToStep(3)">
+    <span class="nav-num" id="num-3">3</span> Dependencias Python
+  </div>
+  <div class="nav-item" id="nav-4" onclick="scrollToStep(4)">
+    <span class="nav-num" id="num-4">4</span> Archivo .env
+  </div>
+  <div class="nav-item" id="nav-5" onclick="scrollToStep(5)">
+    <span class="nav-num" id="num-5">5</span> Carpeta en red
+  </div>
+  <div class="nav-item" id="nav-6" onclick="scrollToStep(6)">
+    <span class="nav-num" id="num-6">6</span> Firewall
+  </div>
+  <div class="nav-item" id="nav-7" onclick="scrollToStep(7)">
+    <span class="nav-num" id="num-7">7</span> Servicio NSSM
+  </div>
+  <div class="nav-item" id="nav-8" onclick="scrollToStep(8)">
+    <span class="nav-num" id="num-8">8</span> Verificar red
+  </div>
+  <div class="nav-item" id="nav-9" onclick="scrollToStep(9)">
+    <span class="nav-num" id="num-9">9</span> Crear usuarios
+  </div>
+  <div class="nav-item" id="nav-10" onclick="scrollToStep(10)">
+    <span class="nav-num" id="num-10">10</span> Distribuir a empleados
+  </div>
+  <div class="nav-section">Referencia</div>
+  <div class="nav-item" id="nav-11" onclick="scrollToStep(11)">
+    <span class="nav-num" id="num-11">!</span> Troubleshooting
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-title">Despliegue en<br><span>Windows Server</span></div>
+    <div class="hero-sub">Guía interactiva paso a paso para instalar TicketDesk Enterprise.<br>Marca cada paso como completado para seguir tu progreso.</div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-v">10</div><div class="hstat-l">Pasos totales</div></div>
+      <div class="hstat"><div class="hstat-v">30<span style="font-size:13px">min</span></div><div class="hstat-l">Tiempo estimado</div></div>
+      <div class="hstat"><div class="hstat-v">8K+</div><div class="hstat-l">Usuarios soportados</div></div>
+      <div class="hstat"><div class="hstat-v">5050</div><div class="hstat-l">Puerto del servidor</div></div>
+    </div>
+  </div>
+
+  <!-- IP CONFIG -->
+  <div class="ip-config" id="step-0">
+    <div class="ip-config-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+      Configura tu servidor primero — los comandos se actualizarán automáticamente
+    </div>
+    <div class="ip-row">
+      <div class="ip-field">
+        <label>IP interna del servidor</label>
+        <input type="text" id="inp-ip" placeholder="192.168.1.100" oninput="updateIP()" value="192.168.1.100">
+      </div>
+      <div class="ip-field">
+        <label>Nombre de dominio interno (opcional)</label>
+        <input type="text" id="inp-domain" placeholder="ticketdesk.empresa.local" oninput="updateIP()">
+      </div>
+    </div>
+    <div class="ip-note">
+      Los comandos de esta guía usarán: <span id="url-preview">http://192.168.1.100:5050</span>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+
+  <!-- PASO 1 -->
+  <div class="step open" id="step-1">
+    <div class="step-header" onclick="toggleStep(1)">
+      <div class="step-badge">01</div>
+      <div class="step-info">
+        <div class="step-title">Instalar Python 3.11</div>
+        <div class="step-sub">Requerido — Python 3.11 x64 con PATH</div>
+      </div>
+      <span class="step-done-badge" id="done-1" style="display:none">✓ Completado</span>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <ol>
+        <li>Descarga <strong>Python 3.11 x64</strong> desde:<br>
+          <a href="https://www.python.org/downloads/windows/" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:12px">https://www.python.org/downloads/windows/</a>
+        </li>
+        <li>Ejecuta el instalador como <strong>Administrador</strong></li>
+        <li>⚠ Marca <strong>"Add Python to PATH"</strong> antes de instalar</li>
+        <li>Verifica la instalación con:</li>
+      </ol>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CMD</span><button class="code-copy" onclick="copyCode(this,'python --version')">Copiar</button></div>
+        <pre><span class="cmd">python --version</span></pre>
+      </div>
+      <div class="alert ok"><span class="alert-icon">✓</span><div>Debe mostrar: <code class="inline">Python 3.11.x</code></div></div>
+      <button class="check-btn" id="check-1" onclick="markDone(1)">
+        <span class="check-icon">○</span> Marcar paso 1 como completado
+      </button>
+    </div>
+  </div>
+
+  <!-- PASO 2 -->
+  <div class="step" id="step-2">
+    <div class="step-header" onclick="toggleStep(2)">
+      <div class="step-badge">02</div>
+      <div class="step-info">
+        <div class="step-title">Crear la carpeta del sistema</div>
+        <div class="step-sub">Copiar archivos a C:\TicketDesk</div>
+      </div>
+      <span class="step-done-badge" id="done-2" style="display:none">✓ Completado</span>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CMD — Administrador</span><button class="code-copy" onclick="copyCode(this,'mkdir C:\\TicketDesk\nmkdir C:\\TicketDesk\\portales')">Copiar</button></div>
+        <pre><span class="cmd">mkdir C:\TicketDesk
+mkdir C:\TicketDesk\portales</span></pre>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin:10px 0 6px">Copia estos archivos del ZIP a <code class="inline">C:\TicketDesk\</code>:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Estructura</span></div>
+        <pre><span class="path">C:\TicketDesk\</span>
+<span class="tree-item">├── server_enterprise.py</span>
+<span class="tree-item">├── api_client.js</span>
+<span class="tree-item">├── database.py</span>
+<span class="tree-item">├── .env</span>
+<span class="tree-item">└── portales\</span>
+<span class="tree-item">    ├── gestion_tickets_v2.html</span>
+<span class="tree-item">    ├── portal_usuarios.html</span>
+<span class="tree-item">    └── portal_especialista.html</span></pre>
+      </div>
+      <button class="check-btn" id="check-2" onclick="markDone(2)">
+        <span class="check-icon">○</span> Marcar paso 2 como completado
+      </button>
+    </div>
+  </div>
+
+  <!-- PASO 3 -->
+  <div class="step" id="step-3">
+    <div class="step-header" onclick="toggleStep(3)">
+      <div class="step-badge">03</div>
+      <div class="step-info">
+        <div class="step-title">Instalar dependencias Python</div>
+        <div class="step-sub">Flask, WebSocket, LDAP — ~15 MB</div>
+      </div>
+      <span class="step-done-badge" id="done-3" style="display:none">✓ Completado</span>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Abre <strong>CMD como Administrador</strong> y ejecuta:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CMD — Administrador</span><button class="code-copy" onclick="copyCode(this,'cd C:\\TicketDesk\npip install flask flask-cors flask-socketio python-dotenv ldap3 requests eventlet')">Copiar</button></div>
+        <pre><span class="cmd">cd C:\TicketDesk
+pip install flask flask-cors flask-socketio python-dotenv ldap3 requests eventlet</span></pre>
+      </div>
+      <div class="alert info"><span class="alert-icon">ℹ</span><div>Esto puede tardar 1-2 minutos. Requiere conexión a internet en el servidor.</div></div>
+      <div class="alert ok"><span class="alert-icon">✓</span><div>Cuando termine verás: <code class="inline">Successfully installed flask flask-cors flask-socketio...</code></div></div>
+      <button class="check-btn" id="check-3" onclick="markDone(3)">
+        <span class="check-icon">○</span> Marcar paso 3 como completado
+      </button>
+    </div>
+  </div>
+
+  <!-- PASO 4 -->
+  <div class="step" id="step-4">
+    <div class="step-header" onclick="toggleStep(4)">
+      <div class="step-badge">04</div>
+      <div class="step-info">
+        <div class="step-title">Configurar archivo .env</div>
+        <div class="step-sub">Clave JWT, ruta de base de datos y puerto</div>
+      </div>
+      <span class="step-done-badge" id="done-4" style="display:none">✓ Completado</span>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Crea el archivo <code class="inline">C:\TicketDesk\.env</code> con este contenido:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">.env</span><button class="code-copy" id="env-copy-btn" onclick="copyEnv()">Copiar</button></div>
+        <pre id="env-preview"><span class="comment"># ─── OBLIGATORIO — cambia esta clave ─────────────</span>
+<span class="key">JWT_SECRET</span>=<span class="val">CAMBIA_ESTA_CLAVE_LARGA_Y_SEGURA_2026</span>
+
+<span class="comment"># ─── Base de datos ────────────────────────────────</span>
+<span class="key">DB_PATH</span>=<span class="path">C:\TicketDesk\ticketdesk.db</span>
+
+<span class="comment"># ─── Puerto del servidor ──────────────────────────</span>
+<span class="key">PORT</span>=<span class="val">5050</span>
+
+<span class="comment"># ─── URL pública ──────────────────────────────────</span>
+<span class="key">SERVER_URL</span>=<span class="val" id="env-server-url">http://192.168.1.100:5050</span></pre>
+      </div>
+      <div class="alert danger"><span class="alert-icon">⚠</span><div><strong>IMPORTANTE:</strong> Cambia <code class="inline">JWT_SECRET</code> por una cadena larga y única. Esta clave protege todas las sesiones. Ejemplo: <code class="inline">xK9$mP2#vL7@nQ4&wR8!tY3</code></div></div>
+      <button class="check-btn" id="check-4" onclick="markDone(4)">
+        <span class="check-icon">○</span> Marcar paso 4 como completado
+      </button>
+    </div>
+  </div>
+
+  <!-- PASO 5 -->
+  <div class="step" id="step-5">
+    <div class="step-header" onclick="toggleStep(5)">
+      <div class="step-badge">05</div>
+      <div class="step-info">
+        <div class="step-title">Compartir carpeta en red</div>
+        <div class="step-sub">Para que los 8,000 empleados accedan a los portales</div>
+      </div>
+      <span class="step-done-badge" id="done-5" style="display:none">✓ Completado</span>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Con un solo comando (CMD como Administrador):</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CMD — Administrador</span><button class="code-copy" onclick="copyCode(this,'net share TicketDesk=C:\\TicketDesk\\portales /grant:Everyone,READ')">Copiar</button></div>
+        <pre><span class="cmd">net share TicketDesk=C:\TicketDesk\portales /grant:Everyone,READ</span></pre>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin:12px 0 6px">Los empleados acceden abriendo:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Ruta de red</span><button class="code-copy" id="share-copy" onclick="copySharePath()">Copiar</button></div>
+        <pre><span class="path" id="share-path">\\SERVIDOR\TicketDesk\portal_usuarios.html</span></pre>
+      </div>
+      <div class="alert info"><span class="alert-icon">ℹ</span><div>También puedes distribuir el acceso directo via <strong>GPO de Active Directory</strong> para que aparezca en el escritorio de todos automáticamente.</div></div>
+      <button class="check-btn" id="check-5" onclick="markDone(5)">
+        <span class="check-icon">○</span> Marcar paso 5 como completado
+      </button>
+    </div>
+  </div>
+
+  <!-- PASO 6 -->
+  <div class="step" id="step-6">
+    <div class="step-header" onclick="toggleStep(6)">
+      <div class="step-badge">06</div>
+      <div class="step-info">
+        <div class="step-title">Abrir puerto 5050 en el Firewall</div>
+        <div class="step-sub">Regla de entrada y salida en Windows Firewall</div>
+      </div>
+      <span class="step-done-badge" id="done-6" style="display:none">✓ Completado</span>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CMD — Administrador</span><button class="code-copy" onclick="copyCode(this,'netsh advfirewall firewall add rule name=\"TicketDesk API\" protocol=TCP dir=in localport=5050 action=allow\nnetsh advfirewall firewall add rule name=\"TicketDesk API OUT\" protocol=TCP dir=out localport=5050 action=allow')">Copiar</button></div>
+        <pre><span class="cmd">netsh advfirewall firewall add rule name="TicketDesk API" protocol=TCP dir=in localport=5050 action=allow
+netsh advfirewall firewall add rule name="TicketDesk API OUT" protocol=TCP dir=out localport=5050 action=allow</span></pre>
+      </div>
+      <div class="alert info"><span class="alert-icon">ℹ</span><div>Si tienes un firewall corporativo externo (Fortinet, Cisco, etc.), también deberás abrir el puerto 5050 en ese dispositivo para las PCs de empleados en otras subredes.</div></div>
+      <button class="check-btn" id="check-6" onclick="markDone(6)">
+        <span class="check-icon">○</span> Marcar paso 6 como completado
+      </button>
+    </div>
+  </div>
+
+  <!-- PASO 7 -->
+  <div class="step" id="step-7">
+    <div class="step-header" onclick="toggleStep(7)">
+      <div class="step-badge">07</div>
+      <div class="step-info">
+        <div class="step-title">Instalar como servicio de Windows (NSSM)</div>
+        <div class="step-sub">Arranque automático con el servidor</div>
+      </div>
+      <span class="step-done-badge" id="done-7" style="display:none">✓ Completado</span>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px"><strong>7a.</strong> Descarga NSSM desde <a href="https://nssm.cc/download" target="_blank" style="color:var(--blue)">nssm.cc/download</a> y copia <code class="inline">nssm.exe</code> a <code class="inline">C:\TicketDesk\</code></p>
+      <p style="font-size:13px;color:var(--text2);margin:10px 0 6px"><strong>7b.</strong> Instalar y configurar el servicio:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CMD — Administrador</span><button class="code-copy" onclick="copyCode(this,'cd C:\\TicketDesk\nnssm.exe install TicketDesk\nnssm.exe set TicketDesk AppDirectory C:\\TicketDesk\nnssm.exe set TicketDesk Start SERVICE_AUTO_START\nnssm.exe start TicketDesk')">Copiar</button></div>
+        <pre><span class="cmd">cd C:\TicketDesk
+nssm.exe install TicketDesk</span>
+<span class="comment">En la ventana que aparece:
+  Path:      C:\Python311\python.exe
+  Arguments: server_enterprise.py
+  Startup:   C:\TicketDesk</span>
+<span class="cmd">nssm.exe set TicketDesk AppDirectory C:\TicketDesk
+nssm.exe set TicketDesk Start SERVICE_AUTO_START
+nssm.exe start TicketDesk</span></pre>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin:10px 0 6px"><strong>7c.</strong> Verificar que el servidor responde:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CMD</span><button class="code-copy" onclick="copyCode(this,'curl http://localhost:5050/api/health')">Copiar</button></div>
+        <pre><span class="cmd">curl http://localhost:5050/api/health</span>
+<span class="comment">Respuesta esperada:
+{"status":"ok","db":true,"version":"2.0-enterprise"}</span></pre>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin:10px 0 6px">Comandos de gestión del servicio:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Gestión</span><button class="code-copy" onclick="copyCode(this,'nssm.exe start TicketDesk\nnssm.exe stop TicketDesk\nnssm.exe restart TicketDesk\nnssm.exe status TicketDesk')">Copiar</button></div>
+        <pre><span class="cmd">nssm.exe start TicketDesk</span>    <span class="comment">← iniciar</span>
+<span class="cmd">nssm.exe stop TicketDesk</span>     <span class="comment">← detener</span>
+<span class="cmd">nssm.exe restart TicketDesk</span>  <span class="comment">← reiniciar</span>
+<span class="cmd">nssm.exe status TicketDesk</span>   <span class="comment">← ver estado</span></pre>
+      </div>
+      <button class="check-btn" id="check-7" onclick="markDone(7)">
+        <span class="check-icon">○</span> Marcar paso 7 como completado
+      </button>
+    </div>
+  </div>
+
+  <!-- PASO 8 -->
+  <div class="step" id="step-8">
+    <div class="step-header" onclick="toggleStep(8)">
+      <div class="step-badge">08</div>
+      <div class="step-info">
+        <div class="step-title">Verificar acceso desde la red</div>
+        <div class="step-sub">Prueba desde otra PC antes de distribuir</div>
+      </div>
+      <span class="step-done-badge" id="done-8" style="display:none">✓ Completado</span>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">Desde otra PC de la red, abre el navegador y ve a:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Navegador</span><button class="code-copy" id="health-copy" onclick="copyHealthUrl()">Copiar URL</button></div>
+        <pre><span class="path" id="health-url">http://192.168.1.100:5050/api/health</span></pre>
+      </div>
+      <div class="alert ok"><span class="alert-icon">✓</span><div>Si responde <code class="inline">{"status":"ok"}</code> el servidor está accesible desde la red.</div></div>
+      <div class="alert warn"><span class="alert-icon">⚠</span><div>Si no responde: verifica el firewall de Windows (Paso 6) y que el servidor esté en la misma VLAN que los clientes.</div></div>
+      <button class="check-btn" id="check-8" onclick="markDone(8)">
+        <span class="check-icon">○</span> Marcar paso 8 como completado
+      </button>
+    </div>
+  </div>
+
+  <!-- PASO 9 -->
+  <div class="step" id="step-9">
+    <div class="step-header" onclick="toggleStep(9)">
+      <div class="step-badge">09</div>
+      <div class="step-info">
+        <div class="step-title">Crear usuarios iniciales</div>
+        <div class="step-sub">Admin, técnicos y empleados de prueba</div>
+      </div>
+      <span class="step-done-badge" id="done-9" style="display:none">✓ Completado</span>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">Primero obtén el token de administrador:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CMD</span><button class="code-copy" id="login-copy" onclick="copyLoginCmd()">Copiar</button></div>
+        <pre id="login-cmd"><span class="cmd">curl -X POST <span class="path" id="login-url">http://192.168.1.100:5050</span>/api/auth/login ^
+  -H "Content-Type: application/json" ^
+  -d "{\"username\":\"admin\",\"password\":\"tu_password\",\"company_id\":\"me\"}"</span></pre>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin:10px 0 6px">Luego crea un técnico de TI (usa el token de la respuesta anterior):</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CMD</span><button class="code-copy" id="user-copy" onclick="copyUserCmd()">Copiar</button></div>
+        <pre id="user-cmd"><span class="cmd">curl -X POST <span class="path" id="user-url">http://192.168.1.100:5050</span>/api/users ^
+  -H "Authorization: Bearer TOKEN_AQUI" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"username\":\"jgarcia\",\"display_name\":\"Juan Garcia\",\"role\":\"agent\",\"company_id\":\"me\",\"password\":\"Pass123!\"}"</span></pre>
+      </div>
+      <div class="alert info"><span class="alert-icon">ℹ</span><div>Roles disponibles: <code class="inline">admin</code> · <code class="inline">agent</code> (técnico TI) · <code class="inline">user</code> (empleado). Los empleados normales no necesitan cuenta — se crean automáticamente al primer login si LDAP está configurado.</div></div>
+      <button class="check-btn" id="check-9" onclick="markDone(9)">
+        <span class="check-icon">○</span> Marcar paso 9 como completado
+      </button>
+    </div>
+  </div>
+
+  <!-- PASO 10 -->
+  <div class="step" id="step-10">
+    <div class="step-header" onclick="toggleStep(10)">
+      <div class="step-badge">10</div>
+      <div class="step-info">
+        <div class="step-title">Distribuir a los 8,000 empleados</div>
+        <div class="step-sub">Carpeta de red + mensaje para empleados</div>
+      </div>
+      <span class="step-done-badge" id="done-10" style="display:none">✓ Completado</span>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">Envía este mensaje por correo o Teams a todos los empleados:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Plantilla de correo</span><button class="code-copy" id="email-copy" onclick="copyEmailTemplate()">Copiar</button></div>
+        <pre id="email-template" style="white-space:pre-wrap"><span class="comment">Asunto: Nuevo sistema de soporte TI — TicketDesk</span>
+
+<span class="cmd">Estimado/a colaborador/a,
+
+A partir de hoy pueden reportar cualquier problema de TI
+a través de nuestro nuevo sistema TicketDesk.
+
+Para abrir el portal:</span>
+<span class="path" id="email-path">\\SERVIDOR\TicketDesk\portal_usuarios.html</span>
+<span class="cmd">
+La primera vez te pedirá configurar el servidor.
+Escribe: </span><span class="val" id="email-server">http://192.168.1.100:5050</span><span class="cmd"> y haz clic en Verificar.
+
+Usuario y contraseña: los mismos de Windows.
+
+Soporte TI</span></pre>
+      </div>
+      <div class="alert ok"><span class="alert-icon">✓</span><div>Si tienes <strong>Active Directory + GPO</strong>, puedes crear un acceso directo en el escritorio de todos los empleados apuntando a la ruta de red del portal de usuarios.</div></div>
+      <button class="check-btn" id="check-10" onclick="markDone(10)">
+        <span class="check-icon">○</span> Marcar paso 10 como completado
+      </button>
+    </div>
+  </div>
+
+  <!-- TROUBLESHOOTING -->
+  <div class="step" id="step-11">
+    <div class="step-header" onclick="toggleStep(11)">
+      <div class="step-badge" style="font-size:18px">!</div>
+      <div class="step-info">
+        <div class="step-title">Troubleshooting</div>
+        <div class="step-sub">Soluciones a problemas comunes</div>
+      </div>
+      <span class="step-toggle">▾</span>
+    </div>
+    <div class="step-body">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Problema</th><th>Diagnóstico</th><th>Solución</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">pip</code> no reconocido</td><td><code class="inline">python --version</code></td><td>Reinstala Python marcando "Add to PATH"</td></tr>
+            <tr><td>Puerto 5050 no accesible</td><td><code class="inline">netstat -an | find "5050"</code></td><td>Verifica la regla del firewall del Paso 6</td></tr>
+            <tr><td>Error "address in use"</td><td><code class="inline">netstat -ano | find "5050"</code></td><td>Otro proceso usa el puerto, cambia PORT en .env</td></tr>
+            <tr><td>HTML no conecta al servidor</td><td>Abre el navegador en la URL del servidor</td><td>Verifica que la URL en el campo del portal sea correcta</td></tr>
+            <tr><td>Empleados no ven la carpeta</td><td><code class="inline">net share</code> para ver recursos</td><td>Verifica permisos: Todos → Lectura en la carpeta</td></tr>
+            <tr><td>Servicio no arranca</td><td><code class="inline">type C:\TicketDesk\ticketdesk_err.log</code></td><td>Revisa el log de errores del servicio NSSM</td></tr>
+            <tr><td>Login falla con contraseña correcta</td><td>Revisar .env JWT_SECRET</td><td>Si cambiaste JWT_SECRET, todos los tokens anteriores se invalidan. Reinicia el servicio.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin:12px 0 6px">Ver logs en tiempo real:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CMD</span><button class="code-copy" onclick="copyCode(this,'type C:\\TicketDesk\\ticketdesk.log')">Copiar</button></div>
+        <pre><span class="cmd">type C:\TicketDesk\ticketdesk.log</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARQUITECTURA -->
+  <div style="margin-top:32px">
+    <div style="font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Arquitectura del sistema</div>
+    <div class="arch">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px">
+        <div class="arch-box blue">8,000 empleados</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box green">portal_usuarios.html</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box orange" id="arch-server">server_enterprise.py :5050</div>
+        <div class="arch-arrow">←</div>
+        <div class="arch-box blue">gestion_tickets_v2.html</div>
+        <div style="color:var(--text3);font-size:11px">100 técnicos TI</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:0px;border-left:1px dashed var(--border2);height:30px;margin-left:60px"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="margin-left:68px"></div>
+        <div class="arch-arrow" style="transform:rotate(90deg)">→</div>
+        <div class="arch-box green">ticketdesk.db (SQLite WAL)</div>
+        <div style="font-size:11px;color:var(--text3)">C:\TicketDesk\ticketdesk.db</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL CHECKLIST -->
+  <div class="checklist">
+    <div class="checklist-title">Lista de verificación final</div>
+    <div id="final-checks"></div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:13px;color:var(--text3)" id="final-progress">0 de 10 pasos completados</div>
+      <div id="final-badge" style="display:none;font-size:12px;padding:6px 14px;border-radius:20px;background:var(--green-l);color:var(--green);border:1px solid rgba(42,157,92,.3);font-weight:700">✓ DESPLIEGUE COMPLETO</div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+var doneSteps = JSON.parse(localStorage.getItem('td_deploy_done')||'[]');
+var openSteps = [1];
+var TOTAL = 10;
+
+function getIP(){ return document.getElementById('inp-ip').value||'192.168.1.100'; }
+function getDomain(){ return document.getElementById('inp-domain').value||''; }
+function getURL(){ return 'http://'+getIP()+':5050'; }
+function getServerName(){
+  var d=getDomain(); if(d) return d.replace(/^https?:\/\//,'').split(':')[0]; return getIP();
+}
+
+function updateIP(){
+  var url=getURL();
+  var domain=getDomain();
+  // Update all dynamic elements
+  ['env-server-url','health-url'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.textContent=url+(id==='health-url'?'/api/health':'');
+  });
+  ['login-url','user-url'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.textContent=url;
+  });
+  document.getElementById('url-preview').textContent=url;
+  var emailServer=document.getElementById('email-server');
+  if(emailServer)emailServer.textContent=url;
+  var emailPath=document.getElementById('email-path');
+  if(emailPath)emailPath.textContent='\\\\'+getServerName()+'\\TicketDesk\\portal_usuarios.html';
+  var sharePath=document.getElementById('share-path');
+  if(sharePath)sharePath.textContent='\\\\'+getServerName()+'\\TicketDesk\\portal_usuarios.html';
+  var archServer=document.getElementById('arch-server');
+  if(archServer)archServer.textContent='server_enterprise.py :5050 ('+getIP()+')';
+}
+
+function toggleStep(n){
+  var step=document.getElementById('step-'+n);
+  var isOpen=step.classList.contains('open');
+  // Close all
+  for(var i=1;i<=11;i++){
+    var s=document.getElementById('step-'+i);
+    if(s)s.classList.remove('open');
+  }
+  if(!isOpen) step.classList.add('open');
+  updateNavActive(n);
+}
+
+function scrollToStep(n){
+  var el=document.getElementById('step-'+n);
+  if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(function(){
+    if(!el.classList.contains('open')){
+      toggleStep(n);
+    }
+  },300);
+}
+
+function markDone(n){
+  if(!doneSteps.includes(n)) doneSteps.push(n);
+  localStorage.setItem('td_deploy_done',JSON.stringify(doneSteps));
+  var step=document.getElementById('step-'+n);
+  step.classList.add('done');
+  var badge=document.getElementById('done-'+n);
+  if(badge)badge.style.display='';
+  var btn=document.getElementById('check-'+n);
+  if(btn){btn.classList.add('done');btn.querySelector('.check-icon').textContent='✓';btn.textContent='';btn.innerHTML='<span class="check-icon">✓</span> Paso '+n+' completado';}
+  var navItem=document.getElementById('nav-'+n);
+  if(navItem){navItem.classList.add('done');var num=document.getElementById('num-'+n);if(num)num.textContent='✓';}
+  updateProgress();
+  updateFinalChecklist();
+  // Auto-open next step
+  if(n<10){
+    setTimeout(function(){
+      var next=document.getElementById('step-'+(n+1));
+      if(next&&!next.classList.contains('open'))toggleStep(n+1);
+      scrollToStep(n+1);
+    },400);
+  }
+}
+
+function updateProgress(){
+  var pct=Math.round(doneSteps.length/TOTAL*100);
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('progress-lbl').textContent=pct+'%';
+}
+
+function updateNavActive(n){
+  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
+  var nav=document.getElementById('nav-'+n);
+  if(nav)nav.classList.add('active');
+}
+
+function updateFinalChecklist(){
+  var el=document.getElementById('final-checks');
+  var labels=['Instalar Python 3.11','Crear carpeta C:\\TicketDesk','Instalar dependencias Python','Configurar archivo .env','Compartir carpeta en red','Abrir puerto 5050 en firewall','Instalar servicio NSSM','Verificar acceso desde la red','Crear usuarios iniciales','Distribuir a empleados'];
+  el.innerHTML=labels.map(function(l,i){
+    var n=i+1;
+    var done=doneSteps.includes(n);
+    return '<div class="check-item'+(done?' checked':'')+'" onclick="if(!'+done+')markDone('+n+')">'
+      +'<div class="check-box'+(done?' checked':'')+'">'+( done?'✓':'' )+'</div>'
+      +'<div class="check-item-text">Paso '+n+' — '+l+'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('final-progress').textContent=doneSteps.length+' de '+TOTAL+' pasos completados';
+  if(doneSteps.length>=TOTAL) document.getElementById('final-badge').style.display='';
+}
+
+function copyCode(btn,text){
+  navigator.clipboard.writeText(text).then(function(){
+    btn.textContent='Copiado ✓';btn.classList.add('copied');
+    setTimeout(function(){btn.textContent='Copiar';btn.classList.remove('copied');},2000);
+  });
+}
+
+function copyEnv(){
+  var ip=getIP();
+  var text='JWT_SECRET=CAMBIA_ESTA_CLAVE_LARGA_Y_SEGURA_2026\nDB_PATH=C:\\TicketDesk\\ticketdesk.db\nPORT=5050\nSERVER_URL=http://'+ip+':5050';
+  copyCode(document.getElementById('env-copy-btn'),text);
+}
+
+function copyHealthUrl(){
+  copyCode(document.getElementById('health-copy'),'http://'+getIP()+':5050/api/health');
+}
+
+function copySharePath(){
+  copyCode(document.getElementById('share-copy'),'\\\\'+getServerName()+'\\TicketDesk\\portal_usuarios.html');
+}
+
+function copyLoginCmd(){
+  var text='curl -X POST http://'+getIP()+':5050/api/auth/login ^\n  -H "Content-Type: application/json" ^\n  -d "{\\"username\\":\\"admin\\",\\"password\\":\\"tu_password\\",\\"company_id\\":\\"me\\"}"';
+  copyCode(document.getElementById('login-copy'),text);
+}
+
+function copyUserCmd(){
+  var text='curl -X POST http://'+getIP()+':5050/api/users ^\n  -H "Authorization: Bearer TOKEN_AQUI" ^\n  -H "Content-Type: application/json" ^\n  -d "{\\"username\\":\\"jgarcia\\",\\"display_name\\":\\"Juan Garcia\\",\\"role\\":\\"agent\\",\\"company_id\\":\\"me\\",\\"password\\":\\"Pass123!\\"}"';
+  copyCode(document.getElementById('user-copy'),text);
+}
+
+function copyEmailTemplate(){
+  var text='Asunto: Nuevo sistema de soporte TI — TicketDesk\n\nEstimado/a colaborador/a,\n\nA partir de hoy pueden reportar cualquier problema de TI\na través de nuestro nuevo sistema TicketDesk.\n\nPara abrir el portal:\n\\\\'+getServerName()+'\\TicketDesk\\portal_usuarios.html\n\nLa primera vez te pedirá configurar el servidor.\nEscribe: http://'+getIP()+':5050 y haz clic en Verificar.\n\nUsuario y contraseña: los mismos de Windows.\n\nSoporte TI';
+  copyCode(document.getElementById('email-copy'),text);
+}
+
+// Restore state
+doneSteps.forEach(function(n){
+  var step=document.getElementById('step-'+n);
+  if(step){
+    step.classList.add('done');
+    var badge=document.getElementById('done-'+n);
+    if(badge)badge.style.display='';
+    var btn=document.getElementById('check-'+n);
+    if(btn){btn.classList.add('done');btn.innerHTML='<span class="check-icon">✓</span> Paso '+n+' completado';}
+    var navItem=document.getElementById('nav-'+n);
+    if(navItem){navItem.classList.add('done');var num=document.getElementById('num-'+n);if(num)num.textContent='✓';}
+  }
+});
+
+updateProgress();
+updateFinalChecklist();
+updateIP();
+
+// Intersection observer for active nav
+var observer=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){
+      var id=e.target.id;
+      var n=id.replace('step-','');
+      updateNavActive(n);
+    }
+  });
+},{threshold:0.3});
+for(var i=0;i<=11;i++){
+  var el=document.getElementById('step-'+i);
+  if(el)observer.observe(el);
+}
+</script>
+</body>
+</html>

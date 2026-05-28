@@ -1,0 +1,452 @@
+name: Build, Test & Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'backend/**'
+      - 'botengine/**'
+      - 'evaluation/**'
+      - 'compliance/**'
+      - 'celery/**'
+      - 'frontend/**'
+      - '.github/workflows/deploy.yml'
+  pull_request:
+    branches:
+      - main
+      - staging
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  # ============================================
+  # STAGE 1: LINT & BUILD
+  # ============================================
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [backend, botengine, evaluation, compliance, celery, frontend]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        if: matrix.service != 'frontend'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node
+        if: matrix.service == 'frontend'
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Lint Python
+        if: matrix.service != 'frontend'
+        run: |
+          cd ${{ matrix.service }}
+          pip install black pylint mypy
+          black --check .
+          pylint src/ --exit-zero  # Don't fail, just report
+          mypy src/ --ignore-missing-imports
+
+      - name: Lint TypeScript
+        if: matrix.service == 'frontend'
+        run: |
+          cd frontend
+          npm install
+          npm run lint
+
+  # ============================================
+  # STAGE 2: UNIT TESTS
+  # ============================================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    strategy:
+      matrix:
+        service:
+          - backend
+          - botengine
+          - evaluation
+          - compliance
+          - celery
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd ${{ matrix.service }}
+          pip install -r requirements.txt pytest pytest-cov pytest-asyncio
+
+      - name: Run unit tests
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/0
+        run: |
+          cd ${{ matrix.service }}
+          pytest tests/unit/ -v --cov=src --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./${{ matrix.service }}/coverage.xml
+          flags: ${{ matrix.service }}
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run tests
+        run: |
+          cd frontend
+          npm test -- --coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./frontend/coverage/coverage-final.json
+          flags: frontend
+
+  # ============================================
+  # STAGE 3: DOCKER BUILD
+  # ============================================
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [test, test-frontend]
+    if: github.event_name == 'push'
+    outputs:
+      backend-image: ${{ steps.image-names.outputs.backend }}
+      botengine-image: ${{ steps.image-names.outputs.botengine }}
+      evaluation-image: ${{ steps.image-names.outputs.evaluation }}
+      compliance-image: ${{ steps.image-names.outputs.compliance }}
+      celery-image: ${{ steps.image-names.outputs.celery }}
+      frontend-image: ${{ steps.image-names.outputs.frontend }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set image names
+        id: image-names
+        run: |
+          echo "backend=${{ env.ECR_REGISTRY }}/ticketdesk-backend:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+          echo "botengine=${{ env.ECR_REGISTRY }}/ticketdesk-botengine:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+          echo "evaluation=${{ env.ECR_REGISTRY }}/ticketdesk-evaluation:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+          echo "compliance=${{ env.ECR_REGISTRY }}/ticketdesk-compliance:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+          echo "celery=${{ env.ECR_REGISTRY }}/ticketdesk-celery:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+          echo "frontend=${{ env.ECR_REGISTRY }}/ticketdesk-frontend:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+
+      - name: Build and push backend image
+        run: |
+          docker build -t ${{ steps.image-names.outputs.backend }} ./backend
+          docker push ${{ steps.image-names.outputs.backend }}
+
+      - name: Build and push botengine image
+        run: |
+          docker build -t ${{ steps.image-names.outputs.botengine }} ./botengine
+          docker push ${{ steps.image-names.outputs.botengine }}
+
+      - name: Build and push evaluation image
+        run: |
+          docker build -t ${{ steps.image-names.outputs.evaluation }} ./evaluation
+          docker push ${{ steps.image-names.outputs.evaluation }}
+
+      - name: Build and push compliance image
+        run: |
+          docker build -t ${{ steps.image-names.outputs.compliance }} ./compliance
+          docker push ${{ steps.image-names.outputs.compliance }}
+
+      - name: Build and push celery image
+        run: |
+          docker build -t ${{ steps.image-names.outputs.celery }} ./celery
+          docker push ${{ steps.image-names.outputs.celery }}
+
+      - name: Build and push frontend image
+        run: |
+          docker build -t ${{ steps.image-names.outputs.frontend }} ./frontend
+          docker push ${{ steps.image-names.outputs.frontend }}
+
+  # ============================================
+  # STAGE 4: E2E TESTS (Optional, para main)
+  # ============================================
+  e2e-tests:
+    name: E2E Tests (Staging)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Playwright
+        run: |
+          pip install playwright pytest pytest-asyncio
+          playwright install chromium
+
+      - name: Run E2E tests
+        env:
+          TEST_URL: https://staging.ticketdesk.com
+          TEST_USER_EMAIL: test@example.com
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        run: |
+          pytest tests/e2e/ -v --tb=short
+        timeout-minutes: 10
+        continue-on-error: true  # Don't block deployment
+
+  # ============================================
+  # STAGE 5: DEPLOY TO ENVIRONMENT
+  # ============================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: https://staging.ticketdesk.com
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update ECS services
+        run: |
+          # Update Backend service
+          aws ecs update-service \
+            --cluster ticketdesk-staging \
+            --service backend-service \
+            --force-new-deployment
+
+          # Update BotEngine service
+          aws ecs update-service \
+            --cluster ticketdesk-staging \
+            --service botengine-service \
+            --force-new-deployment
+
+          # Update other services...
+          # (evaluation, compliance, celery)
+
+      - name: Wait for deployment
+        run: |
+          aws ecs wait services-stable \
+            --cluster ticketdesk-staging \
+            --services backend-service
+
+      - name: Health check
+        run: |
+          curl -f https://staging.ticketdesk.com/health || exit 1
+
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Staging deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, e2e-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://api.ticketdesk.com
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Create database backups
+        run: |
+          # RDS snapshot
+          aws rds create-db-snapshot \
+            --db-instance-identifier ticketdesk-prod \
+            --db-snapshot-identifier ticketdesk-prod-$(date +%s)
+
+      - name: Blue/Green Deployment
+        run: |
+          # Update Backend service (ECS)
+          aws ecs update-service \
+            --cluster ticketdesk-prod \
+            --service backend-service \
+            --force-new-deployment
+
+          # Wait for stabilization
+          aws ecs wait services-stable \
+            --cluster ticketdesk-prod \
+            --services backend-service
+
+          # Repeat for other services...
+
+      - name: Health checks
+        run: |
+          # Check API
+          curl -f https://api.ticketdesk.com/health || exit 1
+          curl -f https://api.ticketdesk.com/botengine/health || exit 1
+
+          # Check database
+          psql -h $(aws ssm get-parameter --name /ticketdesk/prod/rds-endpoint --query 'Parameter.Value' --output text) \
+               -U ticketdesk_user \
+               -d ticketdesk \
+               -c "SELECT 1;" > /dev/null || exit 1
+
+      - name: Smoke tests
+        run: |
+          pytest tests/smoke/ -v --tb=short
+
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Production deployment ${{ job.status }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Create GitHub Release
+        if: success()
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          body: |
+            Deployed to production
+            Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+
+  # ============================================
+  # STAGE 6: ROLLBACK (Manual)
+  # ============================================
+  rollback:
+    name: Rollback Production
+    runs-on: ubuntu-latest
+    if: failure() && github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Rollback ECS services
+        run: |
+          # Get previous task definition
+          PREVIOUS_TASK_DEF=$(aws ecs describe-services \
+            --cluster ticketdesk-prod \
+            --services backend-service \
+            --query 'services[0].deployments[1].taskDefinition' \
+            --output text)
+
+          # Update service with previous task definition
+          aws ecs update-service \
+            --cluster ticketdesk-prod \
+            --service backend-service \
+            --task-definition $PREVIOUS_TASK_DEF \
+            --force-new-deployment
+
+      - name: Verify rollback
+        run: |
+          curl -f https://api.ticketdesk.com/health || exit 1
+
+      - name: Notify Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'warning'
+          text: 'Production rollback executed'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

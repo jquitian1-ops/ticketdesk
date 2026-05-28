@@ -1,0 +1,121 @@
+﻿{
+  "version": "1.0",
+  "workspace": "TicketDesk Enterprise",
+  "project_type": "greenfield",
+  "phase": "construction",
+  
+  "permissions": {
+    "bash": {
+      "allow": ["git", "docker", "pytest", "npm", "python", "alembic", "curl"],
+      "deny": ["rm -rf", "kill -9", "sudo", "passwd"]
+    },
+    "edit": {
+      "allow": ["app/**", "backend/**", "frontend/**", ".claude/**"],
+      "deny": ["*.git", ".env.production", "secrets.json"]
+    },
+    "write": {
+      "allow": ["docs/**", "aidlc-docs/**", ".claude/**"],
+      "deny": [".env.production", "keys/**"]
+    }
+  },
+
+  "hooks": {
+    "PostToolUse": {
+      "enabled": true,
+      "bash": {
+        "after_edit": "cd backend && black --check . 2>/dev/null || true",
+        "after_write": "cd backend && pytest tests/unit -q 2>/dev/null || true"
+      }
+    }
+  },
+
+  "agents": {
+    "default": "claude-haiku-4-5-20251001",
+    "code-review": {
+      "model": "claude-haiku-4-5-20251001",
+      "tools": ["read", "grep", "bash"]
+    },
+    "test-writer": {
+      "model": "claude-sonnet-4-6",
+      "tools": ["read", "write", "bash", "edit"]
+    },
+    "compliance-auditor": {
+      "model": "claude-opus-4-7",
+      "tools": ["read", "grep", "bash"]
+    }
+  },
+
+  "mcp_servers": [
+    {
+      "name": "github",
+      "enabled": true,
+      "config": {
+        "owner": "ticketdesk",
+        "repo": "enterprise",
+        "token_env": "GITHUB_TOKEN"
+      }
+    },
+    {
+      "name": "postgresql",
+      "enabled": true,
+      "config": {
+        "connection_string_env": "DATABASE_URL",
+        "default": "postgresql://localhost:5432/ticketdesk"
+      }
+    },
+    {
+      "name": "vercel",
+      "enabled": true,
+      "config": {
+        "token_env": "VERCEL_TOKEN",
+        "project": "ticketdesk-enterprise"
+      }
+    },
+    {
+      "name": "sequential-thinking",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "name": "excalidraw",
+      "enabled": true,
+      "config": {}
+    }
+  ],
+
+  "testing": {
+    "backend": {
+      "framework": "pytest",
+      "min_coverage": 80,
+      "command": "cd backend && pytest -v --cov=app --cov-report=term-missing"
+    },
+    "frontend": {
+      "framework": "jest",
+      "min_coverage": 80,
+      "command": "cd frontend && npm test -- --coverage --watchAll=false"
+    }
+  },
+
+  "linting": {
+    "backend": {
+      "formatter": "black",
+      "linter": "pylint",
+      "type_checker": "mypy",
+      "config": "pyproject.toml"
+    },
+    "frontend": {
+      "formatter": "prettier",
+      "linter": "eslint",
+      "type_checker": "tsc",
+      "config": ".eslintrc.json"
+    }
+  },
+
+  "environment": {
+    "backend_port": 8000,
+    "frontend_port": 3000,
+    "database": "postgresql://localhost:5432/ticketdesk",
+    "redis": "redis://localhost:6379",
+    "aws_region": "us-south-1"
+  }
+}

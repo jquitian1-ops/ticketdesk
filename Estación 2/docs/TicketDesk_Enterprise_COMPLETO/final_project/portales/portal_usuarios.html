@@ -1,0 +1,2689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Soporte TI — Manufacturas Eliot</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f3f0;--surface:#fff;--border:#e2e0db;--text:#1a1917;--text2:#6b6860;--text3:#a09d97;
+  --accent:#d4500a;--accent-l:#fdf1eb;--green:#1a7a4a;--green-l:#edf7f2;
+  --yellow:#b58500;--yellow-l:#fdf8e8;--red:#c0392b;--red-l:#fdf0ee;--blue:#1a5fa8;--blue-l:#eef4fc;
+  --sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;--r:8px;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:#1a1917;z-index:999;display:flex;align-items:center;justify-content:center;padding:16px}
+.login-card{background:#fff;border-radius:12px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+.login-hd{background:#1a1917;padding:28px 24px;text-align:center;border-bottom:2px solid var(--accent)}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px}
+.login-body{padding:24px}
+.login-error{display:none;padding:10px 12px;background:var(--red-l);color:var(--red);border-radius:var(--r);font-size:12px;margin-bottom:14px;border:1px solid #f0c4c0}
+.login-error.show{display:block}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.fg label{font-size:11px;font-weight:500;color:var(--text2);letter-spacing:.06em;text-transform:uppercase}
+.fg input{padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;color:var(--text);background:var(--bg);outline:none;font-family:var(--sans);transition:border-color .15s}
+.fg input:focus{border-color:var(--accent);background:#fff}
+.login-btn{width:100%;padding:11px;border:none;border-radius:var(--r);background:var(--accent);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:background .15s}
+.login-btn:hover{background:#b8430a}
+.login-btn:disabled{opacity:.7;cursor:not-allowed}
+
+/* PORTAL */
+.portal{display:none;min-height:100vh}
+.portal.active{display:block}
+.topbar{background:#1a1917;border-bottom:2px solid var(--accent);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:#fff}
+.brand-sub{font-size:11px;color:#888;font-weight:400}
+.topbar-r{display:flex;align-items:center;gap:12px}
+.user-badge{display:flex;align-items:center;gap:8px;font-size:12px;color:#aaa}
+.user-av{width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff}
+.logout-btn{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid #444;background:transparent;color:#888;cursor:pointer;font-family:var(--sans)}
+
+.main{max-width:1000px;margin:0 auto;padding:24px 16px}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.ptitle{font-size:20px;font-weight:500}
+.psub{font-size:13px;color:var(--text2);margin-top:3px}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.sc-l{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.sc-v{font-size:26px;font-weight:500;line-height:1}
+.sc-s{font-size:11px;color:var(--text2);margin-top:3px}
+.sc.acc .sc-v{color:var(--accent)}.sc.grn .sc-v{color:var(--green)}.sc.yel .sc-v{color:var(--yellow)}.sc.red .sc-v{color:var(--red)}.sc.blue .sc-v{color:var(--blue)}
+
+/* TICKET LIST */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
+.tw-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:500}
+.ticket-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;display:flex;gap:12px;align-items:flex-start}
+.ticket-item:last-child{border-bottom:none}
+.ticket-item:hover{background:#fafaf8}
+.tk-id{font-family:var(--mono);font-size:11px;color:var(--text3);white-space:nowrap;min-width:72px}
+.tk-body{flex:1;min-width:0}
+.tk-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px}
+.tk-meta{font-size:11px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap}
+.tk-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.bdg{display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px}
+.bo{background:var(--blue-l);color:var(--blue)}.bp2{background:var(--yellow-l);color:var(--yellow)}
+.bd{background:var(--green-l);color:var(--green)}.bc{background:var(--bg);color:var(--text3)}
+.bcrit{background:var(--red-l);color:var(--red)}.bhi{background:var(--accent-l);color:var(--accent)}
+.bmed{background:var(--yellow-l);color:var(--yellow)}.blo{background:var(--green-l);color:var(--green)}
+.sla-mini{font-size:10px;font-family:var(--mono)}
+.empty-state{padding:40px;text-align:center;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+
+/* NEW TICKET MODAL */
+.overlay{position:fixed;inset:0;background:rgba(26,25,23,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.mhead{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.mtit{font-size:15px;font-weight:500}
+.mcl{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)}
+.mbody{padding:16px 20px}
+.mfoot{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.btn{font-size:12px;font-weight:500;padding:8px 16px;border-radius:var(--r);border:1px solid var(--border);cursor:pointer;background:var(--surface);color:var(--text);font-family:var(--sans);transition:all .12s}
+.btn:hover{background:var(--bg)}
+.btn-p{background:var(--accent);color:#fff;border-color:var(--accent)}.btn-p:hover{background:#b8430a}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* DETAIL PANEL */
+.detail-panel{position:fixed;inset:0;background:var(--bg);z-index:150;display:none;overflow-y:auto}
+.detail-panel.open{display:block}
+.detail-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.detail-body{max-width:760px;margin:0 auto;padding:24px 16px}
+.detail-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.meta-item{background:var(--bg);border-radius:6px;padding:8px 12px}
+.meta-lbl{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.meta-val{font-size:13px;font-weight:500;color:var(--text)}
+.comment{padding:10px 0;border-bottom:1px solid var(--border)}
+.comment:last-child{border-bottom:none}
+.cauth{font-weight:500;font-size:12px}.ctxt{color:var(--text2);line-height:1.6;font-size:12px;margin-top:2px}
+.ctime{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.sla-bar{height:6px;border-radius:3px;overflow:hidden;background:var(--border);margin-top:6px}
+.sla-fill{height:100%;border-radius:3px;transition:width .5s}
+.tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:14px}
+.tab-btn{padding:8px 16px;font-size:12px;border:none;background:none;cursor:pointer;color:var(--text2);font-family:var(--sans);border-bottom:2px solid transparent}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* STARS */
+.star{font-size:28px;cursor:pointer;color:#e2e0db;transition:color .1s}
+.star.lit{color:#f5c518}
+
+/* TIMELINE */
+.tl-item{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.tl-item:last-child{border-bottom:none}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.tl-time{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap;min-width:80px}
+
+/* PUSH NOTIF */
+.push-banner{background:var(--blue-l);border:1px solid #b5d4f4;border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:12px}
+.push-banner button{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid #b5d4f4;background:#fff;cursor:pointer;color:var(--blue);font-family:var(--sans)}
+
+.toasts{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:6px}
+.toast-item{background:#1a1917;color:#fff;padding:10px 14px;border-radius:var(--r);font-size:12px;display:flex;align-items:center;gap:7px}
+
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--border)}
+select.flt{padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--bg);color:var(--text);outline:none;font-family:var(--sans)}
+.srch{flex:1;min-width:140px;position:relative}
+.srch input{width:100%;padding:5px 8px 5px 26px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--bg);color:var(--text);outline:none;font-family:var(--sans)}
+.srch-icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:11px}
+
+/* ══ PORTAL VISUAL UPGRADE ══ */
+body{-webkit-font-smoothing:antialiased}
+.login-card{border-radius:14px;box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06)}
+.login-hd{background:linear-gradient(135deg,#1a1917 0%,#2a2117 100%);padding:28px 24px}
+.login-screen{background:radial-gradient(ellipse at 30% 50%,#2a2520 0%,#1a1917 60%)}
+.btn{border-radius:8px;transition:all .15s;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.btn-p{box-shadow:0 2px 8px rgba(212,80,10,.25)}
+.btn-p:hover{box-shadow:0 4px 16px rgba(212,80,10,.35)}
+.tw{border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.04)}
+.sc{border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:transform .15s}
+.sc:hover{transform:translateY(-1px)}
+.fg input,.fg select,.fg textarea{border-radius:8px;padding:9px 12px}
+.fg input:focus{box-shadow:0 0 0 3px rgba(212,80,10,.1)}
+.modal{border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.overlay{backdrop-filter:blur(4px);background:rgba(26,25,23,.45)}
+.ticket-item{transition:background .12s}
+.ticket-item:hover{background:#fafaf8}
+.detail-card{border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.meta-item{border-radius:8px}
+.topbar{box-shadow:0 1px 0 rgba(255,255,255,.06)}
+.ptitle{font-size:19px;font-weight:500;letter-spacing:-.02em}
+.stats{gap:10px}
+.sc.acc{border-top:3px solid var(--accent)}
+.sc.yel{border-top:3px solid var(--yellow)}
+.sc.blue{border-top:3px solid var(--blue)}
+.sc.grn{border-top:3px solid var(--green)}
+.push-banner{border-radius:10px}
+
+
+/* ══ BOT CHAT ══ */
+.bot-fab{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;
+  background:var(--accent);border:none;cursor:pointer;box-shadow:0 4px 20px rgba(212,80,10,.4);
+  display:flex;align-items:center;justify-content:center;font-size:22px;z-index:300;
+  transition:all .2s}
+.bot-fab:hover{transform:scale(1.1);box-shadow:0 8px 28px rgba(212,80,10,.5)}
+.bot-fab .bot-badge{position:absolute;top:-3px;right:-3px;width:16px;height:16px;
+  background:var(--red);border-radius:50%;border:2px solid var(--surface);
+  font-size:9px;color:#fff;display:flex;align-items:center;justify-content:center;
+  font-weight:500;display:none}
+.bot-window{position:fixed;bottom:88px;right:24px;width:360px;height:520px;
+  background:var(--surface);border-radius:16px;box-shadow:0 16px 64px rgba(0,0,0,.2);
+  border:1px solid var(--border);z-index:300;display:none;flex-direction:column;
+  overflow:hidden;animation:botIn .2s ease}
+.bot-window.open{display:flex}
+@keyframes botIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+.bot-head{background:#1a1917;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.bot-av{width:34px;height:34px;border-radius:50%;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.bot-head-info{flex:1}
+.bot-head-name{font-size:13px;font-weight:500;color:#fff}
+.bot-head-status{font-size:11px;color:#aaa;display:flex;align-items:center;gap:5px}
+.bot-status-dot{width:6px;height:6px;border-radius:50%;background:#1a7a4a;
+  animation:bot-pulse 2s ease infinite}
+@keyframes bot-pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.bot-close{background:none;border:none;color:#888;font-size:18px;cursor:pointer;padding:0 4px}
+.bot-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;
+  background:#fafaf8}
+.bot-msgs::-webkit-scrollbar{width:3px}
+.bot-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.bot-msg{display:flex;gap:8px;align-items:flex-end;max-width:90%}
+.bot-msg.user{align-self:flex-end;flex-direction:row-reverse}
+.bot-msg-av{width:24px;height:24px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#fff}
+.bot-bubble{padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.5;max-width:260px}
+.bot-msg.bot  .bot-bubble{background:var(--surface);border:1px solid var(--border);
+  color:var(--text);border-bottom-left-radius:3px}
+.bot-msg.user .bot-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:3px}
+.bot-bubble a{color:inherit;text-decoration:underline;cursor:pointer}
+.bot-bubble ul{margin:6px 0 0 14px;display:flex;flex-direction:column;gap:3px}
+.bot-bubble li{font-size:11px}
+.bot-time{font-size:10px;color:var(--text3);margin-top:2px;text-align:right}
+.bot-typing{display:flex;gap:4px;padding:10px 12px;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;border-bottom-left-radius:3px;
+  width:fit-content}
+.bot-typing span{width:6px;height:6px;border-radius:50%;background:var(--text3);
+  animation:typing .8s ease infinite}
+.bot-typing span:nth-child(2){animation-delay:.15s}
+.bot-typing span:nth-child(3){animation-delay:.3s}
+@keyframes typing{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.bot-suggestions{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;
+  border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.bot-sug{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);
+  background:var(--bg);cursor:pointer;color:var(--text2);transition:all .12s;white-space:nowrap}
+.bot-sug:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-l)}
+.bot-inp-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);
+  background:var(--surface);flex-shrink:0}
+.bot-inp{flex:1;border:1px solid var(--border);border-radius:20px;padding:7px 14px;
+  font-size:12px;outline:none;background:var(--bg);color:var(--text);font-family:var(--sans)}
+.bot-inp:focus{border-color:var(--accent);background:#fff}
+.bot-send{width:32px;height:32px;border-radius:50%;background:var(--accent);border:none;
+  cursor:pointer;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0}
+.bot-send:hover{background:#b8430a;transform:scale(1.05)}
+.bot-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;margin-top:6px;font-size:11px}
+.bot-card-title{font-weight:500;color:var(--text);margin-bottom:5px;font-size:12px}
+.bot-card-step{display:flex;gap:6px;padding:3px 0;color:var(--text2)}
+.bot-card-num{width:16px;height:16px;border-radius:50%;background:var(--accent);
+  color:#fff;font-size:9px;font-weight:500;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;margin-top:1px}
+.bot-escalate{background:var(--accent-l);border:1px solid #f0c4a0;border-radius:10px;
+  padding:10px 12px;margin-top:6px;display:flex;align-items:center;gap:8px;
+  font-size:11px;cursor:pointer;transition:all .15s}
+.bot-escalate:hover{background:#fde8d8}
+
+
+/* ══ BOT UPGRADES ══ */
+.bot-rating{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;
+  border-top:1px solid rgba(0,0,0,.06)}
+.bot-rating-lbl{font-size:10px;color:var(--text3)}
+.bot-rate-btn{font-size:14px;cursor:pointer;padding:2px 6px;border-radius:6px;
+  border:1px solid transparent;transition:all .12s;background:none}
+.bot-rate-btn:hover{background:var(--bg);border-color:var(--border)}
+.bot-rate-btn.selected{background:var(--green-l);border-color:#9dd9b8}
+.bot-schedule{background:var(--yellow-l);border:1px solid #f0d98a;border-radius:10px;
+  padding:10px 12px;margin-top:6px;font-size:11px;color:var(--yellow)}
+.bot-urgent{background:var(--red-l);border:1px solid #f0c4c0;border-radius:10px;
+  padding:10px 12px;margin-top:6px;font-size:11px;color:var(--red)}
+.bot-diag-step{background:var(--blue-l);border:1px solid #b5d4f4;border-radius:10px;
+  padding:10px 12px;margin-top:6px;font-size:11px;color:var(--blue)}
+.bot-img{width:100%;border-radius:8px;margin-top:6px;border:1px solid var(--border)}
+.bot-sap-chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;
+  border-radius:20px;background:#eef4fc;color:#1a5fa8;border:1px solid #b5d4f4;
+  margin:2px;cursor:pointer;transition:all .12s}
+.bot-sap-chip:hover{background:#ddeeff}
+.bot-tone-banner{display:flex;align-items:center;gap:8px;padding:7px 12px;
+  border-radius:8px;margin-bottom:6px;font-size:11px;font-weight:500}
+
+
+/* ══ SESSION TIMEOUT ══ */
+.session-overlay{position:fixed;inset:0;background:rgba(26,25,23,.7);z-index:9999;
+  display:none;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(6px)}
+.session-overlay.open{display:flex}
+.session-modal{background:var(--surface,#fff);border-radius:14px;width:100%;max-width:380px;
+  overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.5);border:1px solid var(--border,#e2e0db)}
+.session-hd{background:#1a1917;padding:22px 24px;text-align:center;border-bottom:2px solid #d4500a}
+.session-body{padding:24px;text-align:center}
+.session-timer-ring{width:80px;height:80px;margin:0 auto 16px;position:relative}
+.session-timer-ring svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:#e2e0db;stroke-width:6}
+.ring-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .9s linear,stroke .5s}
+.session-timer-num{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-size:20px;font-weight:500}
+.session-title{font-size:15px;font-weight:500;color:var(--text,#1a1917);margin-bottom:8px}
+.session-msg{font-size:12px;color:var(--text2,#6b6860);line-height:1.6;margin-bottom:20px}
+.session-btns{display:flex;flex-direction:column;gap:8px}
+
+
+/* ══ COMPANY SELECTOR — portal usuarios ══ */
+.co-step{display:none}.co-step.active{display:block}
+.co-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.co-card-opt{border:1.5px solid var(--border);border-radius:12px;padding:14px 8px;
+  cursor:pointer;text-align:center;transition:all .18s;background:var(--surface)}
+.co-card-opt:hover{background:var(--bg)}
+.co-card-opt.sel{border-width:2px}
+.co-icon-wrap{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;margin:0 auto 8px;font-size:18px}
+.co-card-nm{font-size:11px;font-weight:500;color:var(--text);margin-bottom:3px;line-height:1.3}
+.co-back-btn{background:none;border:none;font-size:12px;color:var(--text3);
+  cursor:pointer;font-family:var(--sans);margin-top:8px;display:block;width:100%;text-align:center}
+.co-back-btn:hover{color:var(--text2)}
+
+
+/* ══ SERVER CONFIG ══ */
+.srv-cfg{margin-top:10px;padding:10px 12px;background:var(--bg);border-radius:var(--r);border:1px solid var(--border)}
+.srv-cfg label{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px}
+.srv-cfg-row{display:flex;gap:6px;align-items:center}
+.srv-cfg input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;outline:none;font-family:var(--mono);background:var(--surface)}
+.srv-status{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:#888}
+.srv-status.ok{background:#1a7a4a}.srv-status.err{background:#c0392b}
+
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-hd">
+      <div class="login-logo">
+        <svg width="28" height="28" viewBox="0 0 120 120"><polygon points="60,4 104,4 126,42 104,80 60,80 38,42" fill="#d4500a"/><circle cx="82" cy="42" r="13" fill="#1a1917"/><circle cx="82" cy="42" r="6" fill="#d4500a"/></svg>
+        <div>
+          <div style="font-size:16px;font-weight:500;color:#fff">Portal de Soporte</div>
+          <div style="font-size:11px;color:#d4500a;letter-spacing:.04em" id="portal-co-subtitle">SELECCIONA TU EMPRESA</div>
+        </div>
+      </div>
+    </div>
+    <div class="login-body">
+
+      <!-- PASO 1: EMPRESA -->
+      <div class="co-step active" id="co-step">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px;text-align:center;line-height:1.5">
+          &#127970; ¿A qué empresa perteneces?
+        </div>
+        <div class="co-cards" id="portal-co-grid"></div>
+        <button class="login-btn" id="portal-co-btn" onclick="goToLogin()" disabled>Continuar</button>
+      </div>
+
+      <!-- PASO 2: USUARIO Y CLAVE -->
+      <div class="co-step" id="login-step">
+        <div class="login-error" id="login-error"></div>
+        <div class="fg"><label>Usuario</label>
+          <input type="text" id="l-user" placeholder="Tu usuario de red" autocomplete="username"
+            onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
+        </div>
+        <div class="fg"><label>Contraseña</label>
+          <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar al portal</button>
+        <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center;line-height:1.7">
+          &#128274; Usa tu usuario y contraseña de Windows.
+        </div>
+        
+    <div class="srv-cfg" id="srv-cfg-wrap">
+      <label>Servidor API (opcional — dejar en blanco para modo local)</label>
+      <div class="srv-cfg-row">
+        <input type="text" id="srv-url-inp" placeholder="http://192.168.1.100:5050"
+          spellcheck="false" autocomplete="off" onblur="testServerURL(this.value)">
+        <div class="srv-status" id="srv-status-dot"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px" id="srv-status-lbl">Modo local</div>
+    </div>
+        <button class="co-back-btn" onclick="backToCoSelector()">&#8592; Cambiar empresa</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PORTAL -->
+<div class="portal" id="portal">
+
+  <header class="topbar">
+    <div class="brand">
+      <svg width="20" height="20" viewBox="0 0 120 120"><polygon points="60,4 104,4 126,42 104,80 60,80 38,42" fill="#d4500a"/><circle cx="82" cy="42" r="13" fill="#1a1917"/><circle cx="82" cy="42" r="6" fill="#d4500a"/></svg>
+      Portal de Soporte <span class="brand-sub">Manufacturas Eliot</span>
+    </div>
+    <div class="topbar-r">
+      <div class="user-badge">
+        <div class="user-av" id="u-av">ME</div>
+        <span id="u-name">Usuario</span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">&#9099; Salir</button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Push banner -->
+    <div class="push-banner" id="push-banner" style="display:none">
+      <span style="font-size:16px">&#128276;</span>
+      <span style="flex:1;color:var(--blue)">Activa las notificaciones push para recibir actualizaciones de tus tickets en tiempo real.</span>
+      <button onclick="activarPush()">Activar</button>
+      <button onclick="document.getElementById('push-banner').style.display='none'" style="background:transparent;border:none;cursor:pointer;color:var(--text3);font-size:14px">&#215;</button>
+    </div>
+
+    <!-- Header -->
+    <div class="ph">
+      <div>
+        <div class="ptitle" id="welcome-msg">Bienvenido</div>
+        <div class="psub">Gestiona tus solicitudes de soporte TI</div>
+      </div>
+      <button class="btn btn-p" onclick="abrirNuevoTicket()">&#43; Nuevo ticket</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="sc acc"><div class="sc-l">Total</div><div class="sc-v" id="s-total">0</div><div class="sc-s">mis tickets</div></div>
+      <div class="sc yel"><div class="sc-l">Abiertos</div><div class="sc-v" id="s-open">0</div><div class="sc-s">pendientes</div></div>
+      <div class="sc blue"><div class="sc-l">En progreso</div><div class="sc-v" id="s-prog">0</div><div class="sc-s">siendo atendidos</div></div>
+      <div class="sc grn"><div class="sc-l">Resueltos</div><div class="sc-v" id="s-done">0</div><div class="sc-s">completados</div></div>
+    </div>
+
+    <!-- Ticket list -->
+    <div class="tw">
+      <div class="tw-head">
+        <span>Mis tickets</span>
+        <span id="tk-count" style="font-size:11px;color:var(--text3);font-weight:400"></span>
+      </div>
+      <div class="filter-bar">
+        <div class="srch"><span class="srch-icon">&#9906;</span><input type="text" id="srch" placeholder="Buscar..." oninput="renderList()"></div>
+        <select class="flt" id="fst" onchange="renderList()"><option value="">Todos los estados</option><option>Abierto</option><option>En progreso</option><option>Resuelto</option><option>Cerrado</option></select>
+      </div>
+      <div id="tk-list"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- DETALLE TICKET -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-topbar">
+    <button class="btn" onclick="cerrarDetalle()" style="font-size:12px">&#8592; Volver</button>
+    <span class="mtit" id="det-id-label"></span>
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="btn" onclick="abrirEditar()" id="btn-editar" style="font-size:11px">&#9998; Editar</button>
+    </div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-card">
+      <div id="esc-alert" style="display:none;padding:10px 12px;border-radius:var(--r);margin-bottom:14px;font-size:12px"></div>
+      <div style="margin-bottom:12px">
+        <h2 id="det-title" style="font-size:17px;font-weight:500;color:var(--text);margin-bottom:6px"></h2>
+        <div id="det-tags" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>
+      </div>
+      <div class="meta-grid" id="det-meta"></div>
+      <div id="sla-wrap" style="margin-bottom:4px"></div>
+      <div id="det-desc" style="font-size:13px;color:var(--text2);line-height:1.7;padding:12px;background:var(--bg);border-radius:6px;margin-top:8px"></div>
+    </div>
+    <div class="detail-card" style="padding:0;overflow:hidden">
+      <div class="tab-bar" id="det-tabs">
+        <button class="tab-btn active" id="tab-cmt" onclick="switchTab('cmt')">Comentarios</button>
+        <button class="tab-btn" id="tab-hist" onclick="switchTab('hist')">Historial</button>
+        <button class="tab-btn" id="tab-enc" onclick="switchTab('enc')">Encuesta</button>
+      </div>
+      <div style="padding:14px 16px">
+        <div id="tab-cmt-content">
+          <div id="det-cmts"></div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <input type="text" id="cmt-inp" placeholder="Escribe un comentario o pregunta..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;outline:none;background:var(--bg);color:var(--text);font-family:var(--sans)">
+            <button class="btn btn-p" onclick="enviarComentario()" style="font-size:11px">Enviar</button>
+          </div>
+        </div>
+        <div id="tab-hist-content" style="display:none">
+          <div id="det-hist"></div>
+        </div>
+        <div id="tab-enc-content" style="display:none">
+          <div id="det-enc"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO / EDITAR TICKET -->
+<div class="overlay" id="mo" onclick="closeMo(event)">
+<div class="modal" onclick="event.stopPropagation()">
+  <div class="mhead"><div class="mtit" id="mo-tit">Nuevo ticket</div><button class="mcl" onclick="closeMo()">&#215;</button></div>
+  <div class="mbody">
+    <input type="hidden" id="eid">
+    <div class="fg"><label>Asunto / Título *</label><input type="text" id="f-title" placeholder="Describe el problema brevemente"></div>
+    <div class="fg"><label>Descripción del problema *</label><textarea id="f-desc" style="min-height:90px;width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;resize:vertical;outline:none;background:var(--bg);color:var(--text);font-family:var(--sans)" placeholder="¿Qué está pasando? ¿Desde cuándo? ¿Qué equipo o sistema afecta?"></textarea></div>
+    <div class="frow">
+      <div class="fg" style="margin:0"><label>Área / Categoría</label>
+        <select id="f-cat" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;background:var(--bg);color:var(--text);outline:none;font-family:var(--sans);width:100%">
+          <option>SAP / ABAP</option><option>Red / Conectividad</option><option>Hardware</option>
+          <option>Software</option><option>Base de datos</option><option>Seguridad</option><option>Otro</option>
+        </select>
+      </div>
+      <div class="fg" style="margin:0"><label>Urgencia</label>
+        <select id="f-pri" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;background:var(--bg);color:var(--text);outline:none;font-family:var(--sans);width:100%">
+          <option value="Baja">Baja — Puedo esperar</option>
+          <option value="Media" selected>Media — Necesito atención pronto</option>
+          <option value="Alta">Alta — Afecta mi trabajo</option>
+          <option value="Crítica">Crítica — Producción detenida</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg" style="margin-top:12px"><label>Equipo o sistema afectado</label><input type="text" id="f-equipo" placeholder="Ej: PC-ALMACEN-03, SAP Producción, Impresora Zebra..."></div>
+    <div class="fg"><label>Tu número de extensión (opcional)</label><input type="text" id="f-ext" placeholder="Ext. 1234"></div>
+  </div>
+  <div class="mfoot">
+    <button class="btn" onclick="closeMo()">Cancelar</button>
+    <button class="btn btn-p" onclick="guardarTicket()">Enviar ticket</button>
+  </div>
+</div>
+</div>
+
+<!-- ENCUESTA MODAL -->
+<div class="overlay" id="enc-mo" onclick="closeEnc(event)">
+<div class="modal" onclick="event.stopPropagation()" style="max-width:400px">
+  <div class="mhead"><div class="mtit">&#11088; Calificar atención</div><button class="mcl" onclick="closeEnc()">&#215;</button></div>
+  <div class="mbody" style="text-align:center">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">¿Quedó resuelto tu problema?<br>Califica la atención del equipo de TI.</div>
+    <div id="stars-wrap" style="margin-bottom:16px">
+      <span class="star" onclick="setStar(1)">&#9733;</span><span class="star" onclick="setStar(2)">&#9733;</span>
+      <span class="star" onclick="setStar(3)">&#9733;</span><span class="star" onclick="setStar(4)">&#9733;</span>
+      <span class="star" onclick="setStar(5)">&#9733;</span>
+    </div>
+    <div id="star-label" style="font-size:13px;color:var(--text3);height:18px;margin-bottom:12px"></div>
+    <textarea id="enc-comment" placeholder="¿Algún comentario adicional? (opcional)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;resize:none;height:68px;outline:none;background:var(--bg);font-family:var(--sans)"></textarea>
+  </div>
+  <div class="mfoot">
+    <button class="btn" onclick="closeEnc()">Omitir</button>
+    <button class="btn btn-p" onclick="enviarEncuesta()">Enviar calificación</button>
+  </div>
+</div>
+</div>
+
+
+<!-- ══ BOT DE SOPORTE ══ -->
+<button class="bot-fab" id="bot-fab" onclick="toggleBot()" title="Asistente de soporte TI">
+  <span id="bot-fab-icon">&#129302;</span>
+  <span class="bot-badge" id="bot-badge">1</span>
+</button>
+
+<div class="bot-window" id="bot-window">
+  <div class="bot-head">
+    <div class="bot-av">&#129302;</div>
+    <div class="bot-head-info">
+      <div class="bot-head-name">Asistente TI — Manufacturas Eliot</div>
+      <div class="bot-head-status">
+        <div class="bot-status-dot"></div>
+        <span>En línea · Soporte nivel 1</span>
+      </div>
+    </div>
+    <button class="bot-close" onclick="toggleBot()">&#215;</button>
+  </div>
+
+  <div class="bot-msgs" id="bot-msgs"></div>
+
+  <div class="bot-suggestions" id="bot-sugs"></div>
+
+  <div class="bot-inp-row">
+    <input class="bot-inp" id="bot-inp" type="text"
+      placeholder="Escribe tu pregunta..."
+      onkeydown="if(event.key==='Enter')botSend()"
+      autocomplete="off">
+    <button class="bot-send" onclick="botSend()">&#10148;</button>
+  </div>
+</div>
+
+
+<!-- ══ SESSION TIMEOUT ══ -->
+<div class="session-overlay" id="session-overlay">
+  <div class="session-modal">
+    <div class="session-hd">
+      <svg width="22" height="22" viewBox="0 0 120 120"><polygon points="60,4 104,4 126,42 104,80 60,80 38,42" fill="#d4500a"/><circle cx="82" cy="42" r="13" fill="#1a1917"/><circle cx="82" cy="42" r="6" fill="#d4500a"/></svg>
+      <div style="font-size:13px;font-weight:500;color:#fff;margin-top:6px">TicketDesk</div>
+    </div>
+    <div class="session-body">
+      <div class="session-timer-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle class="ring-bg" cx="40" cy="40" r="34"/>
+          <circle class="ring-fill" id="session-ring" cx="40" cy="40" r="34"
+            stroke-dasharray="213.6" stroke-dashoffset="0" stroke="#d4500a"/>
+        </svg>
+        <div class="session-timer-num" id="session-countdown">60</div>
+      </div>
+      <div class="session-title">&#9203; Sesion por expirar</div>
+      <div class="session-msg">Tu sesion expirara en <strong id="session-secs">60</strong> segundos por inactividad.<br>Deseas continuar trabajando?</div>
+      <div class="session-btns">
+        <button onclick="sessionContinue()" style="padding:11px;border-radius:8px;background:#d4500a;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:500;font-family:inherit">Continuar sesion</button>
+        <button onclick="sessionLogout()" style="padding:8px;border-radius:8px;border:1px solid #e2e0db;background:transparent;color:#6b6860;cursor:pointer;font-size:12px;font-family:inherit">Cerrar sesion ahora</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+var SLAB = ['','Muy insatisfecho','Insatisfecho','Regular','Satisfecho','Muy satisfecho'];
+var SCOL = ['','#c0392b','#e67e22','#b58500','#1a7a4a','#1a5fa8'];
+var SC   = {Abierto:'bo','En progreso':'bp2',Resuelto:'bd',Cerrado:'bc'};
+var PC   = {Crítica:'bcrit',Alta:'bhi',Media:'bmed',Baja:'blo'};
+var PBG  = {Crítica:'#c0392b',Alta:'#d4500a',Media:'#b58500',Baja:'#1a7a4a'};
+var currentUser = null;
+var detailId    = null;
+var encTicketId = null;
+var starRating  = 0;
+var currentTab  = 'cmt';
+
+// ── AUTH ──────────────────────────────────────────────
+var DEMO = {
+  jlopez:  {name:'Juan López',     dept:'Producción',   pass:'1234'},
+  mgarcia: {name:'María García',   dept:'Almacén',      pass:'1234'},
+  rperez:  {name:'Roberto Pérez',  dept:'Contabilidad', pass:'1234'},
+  admin:   {name:'Administrador',  dept:'TI',           pass:'FfSEN/Y7W06#7Wod'},
+};
+
+
+var PORTAL_COS = [
+  {id:'me',    name:'Manufacturas Eliot', icon:'\uD83C\uDFED', color:'#d4500a', bg:'#fdf1eb', border:'#f0c4a0'},
+  {id:'pash',  name:'Pash',               icon:'\uD83C\uDFE2', color:'#1a1917', bg:'#f4f3f0', border:'#888780'},
+  {id:'prima', name:'Primatela',           icon:'\uD83E\uDDF5', color:'#1a5fa8', bg:'#eef4fc', border:'#b5d4f4'},
+];
+var _selectedPortalCo = null;
+
+function buildCoCards(){
+  var grid = document.getElementById('portal-co-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  PORTAL_COS.forEach(function(co){
+    var card = document.createElement('div');
+    card.className = 'co-card-opt';
+    card.innerHTML = '<div class="co-icon-wrap" style="background:'+co.bg+';border:1px solid '+co.border+'">'+co.icon+'</div>'
+      + '<div class="co-card-nm">'+co.name+'</div>';
+    card.addEventListener('click', function(){
+      document.querySelectorAll('.co-card-opt').forEach(function(c){c.classList.remove('sel');c.style.borderColor='';c.style.background='';});
+      card.classList.add('sel');
+      card.style.borderColor = co.color;
+      card.style.background  = co.bg;
+      _selectedPortalCo = co;
+      document.getElementById('portal-co-btn').disabled = false;
+      // Update header accent color
+      applyPortalCoTheme(co);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function applyPortalCoTheme(co){
+  var style = document.getElementById('portal-co-theme');
+  if(!style){style=document.createElement('style');style.id='portal-co-theme';document.head.appendChild(style);}
+  style.textContent = [
+    '.login-hd{border-bottom:2px solid '+co.color+' !important}',
+    '.login-btn{background:'+co.color+' !important}',
+    '#portal-co-subtitle{color:'+co.color+' !important}',
+  ].join('');
+  var sub = document.getElementById('portal-co-subtitle');
+  if(sub) sub.textContent = co.name.toUpperCase();
+}
+
+function goToLogin(){
+  if(!_selectedPortalCo){
+    document.getElementById('portal-co-btn').disabled = true;
+    return;
+  }
+  document.getElementById('co-step').classList.remove('active');
+  document.getElementById('login-step').classList.add('active');
+  // Store company in current session
+  sessionStorage.setItem('portal_co', JSON.stringify(_selectedPortalCo));
+}
+
+function backToCoSelector(){
+  document.getElementById('login-step').classList.remove('active');
+  document.getElementById('co-step').classList.add('active');
+  _selectedPortalCo = null;
+  document.getElementById('portal-co-btn').disabled = true;
+  document.querySelectorAll('.co-card-opt').forEach(function(c){
+    c.classList.remove('sel');c.style.borderColor='';c.style.background='';
+  });
+  // Reset theme
+  var style=document.getElementById('portal-co-theme');
+  if(style) style.textContent='';
+  document.getElementById('login-error').classList.remove('show');
+}
+
+function doLogin(){
+  var u = document.getElementById('l-user').value.trim().toLowerCase();
+  var p = document.getElementById('l-pass').value;
+  var btn = document.getElementById('login-btn');
+  var err = document.getElementById('login-error');
+  if(!u||!p){err.textContent='Ingresa tu usuario y contraseña.';err.classList.add('show');return;}
+  btn.disabled=true;btn.textContent='Verificando...';err.classList.remove('show');
+  setTimeout(function(){
+    var demo=DEMO[u];
+    if(demo&&demo.pass===p||(u.length>=3&&p.length>=4&&!demo)){
+      currentUser={username:u,name:demo?demo.name:u,dept:demo?demo.dept:'',pass:p};
+      document.getElementById('u-name').textContent=currentUser.name;
+      document.getElementById('u-av').textContent=ini(currentUser.name);
+      document.getElementById('welcome-msg').textContent='Hola, '+currentUser.name.split(' ')[0]+'!';
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('portal').classList.add('active');
+      checkPushPermission();
+      renderList();
+    } else {
+      err.textContent='Usuario o contraseña incorrectos.';err.classList.add('show');
+      btn.disabled=false;btn.textContent='Ingresar al portal';
+    }
+  },900);
+}
+function doLogout(){
+  currentUser=null;
+  document.getElementById('portal').classList.remove('active');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('l-pass').value='';
+  document.getElementById('l-user').value='';
+}
+
+// ── DATA ──────────────────────────────────────────────
+function getTickets(){
+  var all=JSON.parse(localStorage.getItem('tdv2_tickets')||'[]');
+  if(!currentUser) return [];
+  // Show tickets created by or assigned to this user
+  return all.filter(function(t){
+    return t.createdBy===currentUser.username||t.assignee===currentUser.name||t.requester===currentUser.name;
+  });
+}
+function getAllTickets(){return JSON.parse(localStorage.getItem('tdv2_tickets')||'[]');}
+function saveTickets(tks){localStorage.setItem('tdv2_tickets',JSON.stringify(tks));}
+function nid(){var all=getAllTickets();var m=all.reduce(function(a,t){return Math.max(a,parseInt(t.id.replace('TKT-',''))||0);},0);return 'TKT-'+String(m+1).padStart(4,'0');}
+function ini(n){return (n||'?').split(' ').map(function(p){return p[0];}).join('').slice(0,2).toUpperCase();}
+function fmt(d){return new Date(d).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'2-digit'});}
+function ftm(d){return new Date(d).toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
+function getSLA(t){
+  if(t.status==='Resuelto'||t.status==='Cerrado') return {status:'done',label:'Resuelto',pct:100,color:'#1a7a4a'};
+  var slaH={Crítica:4,Alta:8,Media:24,Baja:72}[t.priority]||24;
+  var elapsed=(Date.now()-new Date(t.created))/3600000;
+  var pct=Math.min(elapsed/slaH*100,100);
+  if(elapsed>slaH) return {status:'vencido',label:Math.round(elapsed-slaH)+'h sobre SLA',pct:100,color:'#c0392b'};
+  if(pct>75) return {status:'riesgo',label:Math.round(slaH-elapsed)+'h restantes',pct,color:'#b58500'};
+  return {status:'ok',label:Math.round(slaH-elapsed)+'h restantes',pct,color:'#1a7a4a'};
+}
+
+// ── RENDER LIST ───────────────────────────────────────
+function renderList(){
+  var q=(document.getElementById('srch').value||'').toLowerCase();
+  var st=document.getElementById('fst').value;
+  var tickets=getTickets().filter(function(t){
+    return (!q||t.title.toLowerCase().includes(q)||t.id.toLowerCase().includes(q))&&(!st||t.status===st);
+  }).sort(function(a,b){return new Date(b.created)-new Date(a.created);});
+
+  var open=getTickets().filter(function(t){return t.status==='Abierto';}).length;
+  var prog=getTickets().filter(function(t){return t.status==='En progreso';}).length;
+  var done=getTickets().filter(function(t){return t.status==='Resuelto'||t.status==='Cerrado';}).length;
+  document.getElementById('s-total').textContent=getTickets().length;
+  document.getElementById('s-open').textContent=open;
+  document.getElementById('s-prog').textContent=prog;
+  document.getElementById('s-done').textContent=done;
+  document.getElementById('tk-count').textContent=tickets.length+' ticket'+(tickets.length!==1?'s':'');
+
+  var el=document.getElementById('tk-list');
+  if(!tickets.length){
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">&#128203;</div><div style="font-size:14px;font-weight:500;margin-bottom:6px;color:var(--text)">Sin tickets aún</div><div>Cuando reportes un problema aparecerá aquí.</div><div style="margin-top:14px"><button class="btn btn-p" onclick="abrirNuevoTicket()">+ Reportar problema</button></div></div>';
+    return;
+  }
+  el.innerHTML=tickets.map(function(t){
+    var sla=getSLA(t);
+    var slaColor=sla.status==='vencido'?'var(--red)':sla.status==='riesgo'?'var(--yellow)':'var(--green)';
+    var tags=t.tags?t.tags.split(',').map(function(g){return '<span style="font-size:10px;padding:1px 7px;border-radius:20px;background:var(--bg);border:1px solid var(--border);color:var(--text3)">#'+g.trim()+'</span>';}).join(''):'';
+    return '<div class="ticket-item" onclick="abrirDetalle(\''+t.id+'\')">'
+      +'<div class="tk-id">'+t.id+'<br><span class="bdg '+SC[t.status]+'" style="margin-top:4px;display:inline-flex">'+t.status+'</span></div>'
+      +'<div class="tk-body"><div class="tk-title">'+t.title+'</div>'
+      +(tags?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin:4px 0">'+tags+'</div>':'')
+      +'<div class="tk-meta"><span>'+t.category+'</span><span>Creado: '+fmt(t.created)+'</span>'
+      +(t.comments&&t.comments.length?'<span>&#128172; '+t.comments.length+' comentario'+(t.comments.length!==1?'s':'')+'</span>':'')
+      +'</div></div>'
+      +'<div class="tk-right"><span class="bdg '+PC[t.priority]+'">'+t.priority+'</span>'
+      +'<span class="sla-mini" style="color:'+slaColor+'">'+sla.label+'</span></div>'
+      +'</div>';
+  }).join('');
+}
+
+// ── NUEVO TICKET ──────────────────────────────────────
+function abrirNuevoTicket(){
+  document.getElementById('mo-tit').textContent='Nuevo ticket';
+  document.getElementById('eid').value='';
+  ['f-title','f-desc','f-equipo','f-ext'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('f-pri').value='Media';
+  document.getElementById('f-cat').value='SAP / ABAP';
+  document.getElementById('mo').classList.add('open');
+  setTimeout(function(){document.getElementById('f-title').focus();},100);
+}
+
+function guardarTicket(){
+  var title=document.getElementById('f-title').value.trim();
+  var desc=document.getElementById('f-desc').value.trim();
+  if(!title){toast('El título es obligatorio','err');return;}
+  if(desc.length<10){toast('Describe el problema con más detalle','err');return;}
+  var eid=document.getElementById('eid').value;
+  var now=new Date().toISOString();
+  var all=getAllTickets();
+  if(eid){
+    var t=all.find(function(x){return x.id===eid;});
+    if(t&&(t.status==='Abierto'||t.status==='En progreso')){
+      t.title=title;t.desc=desc;t.category=document.getElementById('f-cat').value;
+      t.priority=document.getElementById('f-pri').value;t.updated=now;
+      if(!t.audit)t.audit=[];
+      t.audit.push({ts:now,user:currentUser.name,action:'Ticket editado por el solicitante',color:'#8b5cf6'});
+      saveTickets(all);toast('Ticket actualizado','ok');
+    }
+  } else {
+    var equipo=document.getElementById('f-equipo').value.trim();
+    var ext=document.getElementById('f-ext').value.trim();
+    var fullDesc=desc+(equipo?'\n\nEquipo/sistema: '+equipo:'')+(ext?'\nExtensión: '+ext:'');
+    var tk={
+      id:nid(),title:title,desc:fullDesc,category:document.getElementById('f-cat').value,
+      priority:document.getElementById('f-pri').value,status:'Abierto',assignee:'',
+      createdBy:currentUser.username,requester:currentUser.name,
+      dept:currentUser.dept||'',
+      tags:'',created:now,updated:now,comments:[],
+      audit:[{ts:now,user:currentUser.name,action:'Ticket creado por '+currentUser.name+' ('+currentUser.dept+')',color:'#1a5fa8'}],
+      survey:null,timeLog:[],escalationLevel:0
+    };
+    all.unshift(tk);saveTickets(all);
+    toast('Ticket '+tk.id+' creado. El equipo de TI lo atenderá pronto.','ok');
+    sendPushIfGranted('Ticket registrado','Tu solicitud '+tk.id+' fue enviada al equipo de TI.');
+  }
+  closeMo();renderList();
+}
+
+function abrirEditar(){
+  var all=getAllTickets();
+  var t=all.find(function(x){return x.id===detailId;});
+  if(!t||t.status==='Resuelto'||t.status==='Cerrado'){toast('No se puede editar un ticket resuelto o cerrado','err');return;}
+  document.getElementById('mo-tit').textContent='Editar ticket';
+  document.getElementById('eid').value=t.id;
+  document.getElementById('f-title').value=t.title;
+  document.getElementById('f-desc').value=t.desc;
+  document.getElementById('f-cat').value=t.category;
+  document.getElementById('f-pri').value=t.priority;
+  document.getElementById('mo').classList.add('open');
+}
+
+function closeMo(e){if(e&&e.target!==document.getElementById('mo'))return;document.getElementById('mo').classList.remove('open');}
+
+// ── DETALLE ───────────────────────────────────────────
+function abrirDetalle(id){
+  var t=getAllTickets().find(function(x){return x.id===id;});if(!t) return;
+  detailId=id;
+  document.getElementById('det-id-label').textContent=t.id;
+  document.getElementById('det-title').textContent=t.title;
+  document.getElementById('det-desc').textContent=t.desc||'Sin descripción.';
+
+  // Tags
+  var tagsEl=document.getElementById('det-tags');
+  tagsEl.innerHTML=t.tags?t.tags.split(',').map(function(g){return '<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:var(--bg);border:1px solid var(--border);color:var(--text2)">#'+g.trim()+'</span>';}).join(''):'';
+
+  // Meta grid
+  var PC_C={Crítica:'#c0392b',Alta:'#d4500a',Media:'#b58500',Baja:'#1a7a4a'};
+  var SC_C={Abierto:'#1a5fa8','En progreso':'#b58500',Resuelto:'#1a7a4a',Cerrado:'#888'};
+  document.getElementById('det-meta').innerHTML=[
+    ['Estado','<span style="color:'+SC_C[t.status]+';font-weight:500">'+t.status+'</span>'],
+    ['Urgencia','<span style="color:'+PC_C[t.priority]+';font-weight:500">'+t.priority+'</span>'],
+    ['Categoría',t.category],
+    ['Asignado a',t.assignee||'Pendiente de asignar'],
+    ['Creado',fmt(t.created)],
+    ['Actualizado',fmt(t.updated)],
+  ].map(function(r){return '<div class="meta-item"><div class="meta-lbl">'+r[0]+'</div><div class="meta-val">'+r[1]+'</div></div>';}).join('');
+
+  // SLA
+  var sla=getSLA(t);
+  document.getElementById('sla-wrap').innerHTML='<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px"><span>Tiempo de atención (SLA)</span><span style="color:'+sla.color+';font-weight:500">'+sla.label+'</span></div><div class="sla-bar"><div class="sla-fill" style="width:'+sla.pct+'%;background:'+sla.color+'"></div></div>';
+
+  // Escalation badge
+  var escEl=document.getElementById('esc-alert');
+  var level=t.escalationLevel||0;
+  if(level>0&&t.status!=='Resuelto'&&t.status!=='Cerrado'){
+    var ecfg=[{},{bg:'#fff8e8',color:'#b58500',icon:'⚠',msg:'Tu ticket está siendo revisado con prioridad.'},{bg:'#fdf1eb',color:'#d4500a',icon:'↑',msg:'Tu ticket fue escalado — un especialista lo atenderá pronto.'},{bg:'#fdf0ee',color:'#c0392b',icon:'🚨',msg:'Atención urgente en proceso — nivel máximo de escalación activado.'}];
+    var ec=ecfg[level]||{};
+    escEl.style.cssText='display:flex;align-items:center;gap:8px;padding:10px 12px;background:'+ec.bg+';color:'+ec.color+';border-radius:var(--r);margin-bottom:14px;font-size:12px;border:1px solid '+ec.color+'44';
+    escEl.innerHTML='<span style="font-size:16px">'+ec.icon+'</span><span>'+ec.msg+'</span>';
+  } else {
+    escEl.style.display='none';
+  }
+
+  // Edit button
+  document.getElementById('btn-editar').style.display=(t.status==='Abierto'||t.status==='En progreso')?'inline-flex':'none';
+
+  switchTab('cmt');
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function cerrarDetalle(){
+  document.getElementById('detail-panel').classList.remove('open');
+  detailId=null;renderList();
+}
+
+function switchTab(tab){
+  currentTab=tab;
+  ['cmt','hist','enc'].forEach(function(t){
+    document.getElementById('tab-'+t+'-content').style.display='none';
+    document.getElementById('tab-'+t).classList.remove('active');
+  });
+  document.getElementById('tab-'+tab+'-content').style.display='block';
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='cmt') renderComments();
+  if(tab==='hist') renderHistorial();
+  if(tab==='enc') renderEncuestaTab();
+}
+
+function renderComments(){
+  var t=getAllTickets().find(function(x){return x.id===detailId;});if(!t) return;
+  var el=document.getElementById('det-cmts');
+  el.innerHTML=(t.comments&&t.comments.length)?t.comments.map(function(c){
+    var mine=c.author===currentUser.name;
+    return '<div class="comment" style="'+(mine?'background:var(--accent-l);border-radius:6px;padding:8px 10px;':'')+'"><div style="display:flex;justify-content:space-between;align-items:center"><span class="cauth" style="color:'+(mine?'var(--accent)':'var(--text)')+'">'+(mine?'Tú':c.author)+'</span><span class="ctime">'+ftm(c.date)+'</span></div><div class="ctxt">'+c.text+'</div></div>';
+  }).join(''):'<div style="color:var(--text3);font-size:12px;padding:8px 0">Sin comentarios aún. Puedes escribir una pregunta o actualización.</div>';
+}
+
+function enviarComentario(){
+  var inp=document.getElementById('cmt-inp');var txt=inp.value.trim();if(!txt||!detailId) return;
+  var all=getAllTickets();var t=all.find(function(x){return x.id===detailId;});if(!t) return;
+  if(!t.comments) t.comments=[];
+  var now=new Date().toISOString();
+  t.comments.push({author:currentUser.name,text:txt,date:now});
+  if(!t.audit) t.audit=[];
+  t.audit.push({ts:now,user:currentUser.name,action:'Comentario del solicitante',color:'#1a5fa8'});
+  t.updated=now;saveTickets(all);inp.value='';renderComments();
+  toast('Comentario enviado','ok');
+}
+
+function renderHistorial(){
+  var t=getAllTickets().find(function(x){return x.id===detailId;});if(!t) return;
+  var entries=t.audit||[];
+  document.getElementById('det-hist').innerHTML=entries.length?entries.slice().reverse().map(function(e){
+    return '<div class="tl-item"><div class="tl-dot" style="background:'+(e.color||'#888')+'"></div><div class="tl-time">'+ftm(e.ts)+'</div><div style="flex:1"><span style="font-weight:500">'+e.user+'</span> — '+e.action+'</div></div>';
+  }).join(''):'<div style="color:var(--text3);font-size:12px">Sin historial.</div>';
+}
+
+function renderEncuestaTab(){
+  var t=getAllTickets().find(function(x){return x.id===detailId;});if(!t) return;
+  var el=document.getElementById('det-enc');
+  if(t.survey&&t.survey.rating){
+    el.innerHTML='<div style="text-align:center;padding:16px 0"><div style="font-size:28px;color:#f5c518;margin-bottom:8px">'+Array(t.survey.rating+1).join('&#9733;')+'<span style="color:#e2e0db">'+Array(6-t.survey.rating).join('&#9733;')+'</span></div><div style="font-size:13px;font-weight:500;margin-bottom:6px">Tu calificación: '+t.survey.rating+'/5</div><div style="font-size:12px;color:var(--text2)">'+(t.survey.comment||'Sin comentario adicional')+'</div><div style="font-size:11px;color:var(--text3);margin-top:6px">'+ftm(t.survey.date)+'</div></div>';
+  } else if(t.status==='Resuelto'||t.status==='Cerrado'){
+    el.innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:14px;color:var(--text2);margin-bottom:14px">¿Tu problema fue resuelto?<br>Ayúdanos calificando la atención.</div><button class="btn btn-p" onclick="abrirEncuesta(\''+t.id+'\')">&#11088; Calificar atención</button></div>';
+  } else {
+    el.innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px 0">La encuesta estará disponible cuando tu ticket sea resuelto.</div>';
+  }
+}
+
+// ── ENCUESTA ──────────────────────────────────────────
+function abrirEncuesta(id){
+  encTicketId=id;starRating=0;setStar(0);
+  document.getElementById('enc-comment').value='';
+  document.getElementById('enc-mo').classList.add('open');
+}
+function closeEnc(e){if(e&&e.target!==document.getElementById('enc-mo'))return;document.getElementById('enc-mo').classList.remove('open');}
+function setStar(n){
+  starRating=n;
+  document.querySelectorAll('.star').forEach(function(s,i){s.classList.toggle('lit',i<n);});
+  document.getElementById('star-label').textContent=n?SLAB[n]:'';
+  document.getElementById('star-label').style.color=n?SCOL[n]:'';
+}
+function enviarEncuesta(){
+  if(!starRating){toast('Selecciona una calificación','err');return;}
+  var all=getAllTickets();var t=all.find(function(x){return x.id===encTicketId;});
+  if(t){t.survey={rating:starRating,comment:document.getElementById('enc-comment').value.trim(),date:new Date().toISOString()};saveTickets(all);}
+  closeEnc();renderList();
+  if(detailId===encTicketId) renderEncuestaTab();
+  toast('¡Gracias por tu calificación! '+Array(starRating+1).join('★'),'ok');
+}
+
+// ── PUSH ──────────────────────────────────────────────
+function checkPushPermission(){
+  if('Notification' in window&&Notification.permission==='default'){
+    document.getElementById('push-banner').style.display='flex';
+  }
+}
+function activarPush(){
+  Notification.requestPermission().then(function(r){
+    document.getElementById('push-banner').style.display='none';
+    if(r==='granted') toast('Notificaciones activadas','ok');
+  });
+}
+function sendPushIfGranted(title,body){
+  if('Notification' in window&&Notification.permission==='granted'){
+    var ICON="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cpolygon points='60,4 104,4 126,42 104,80 60,80 38,42' fill='%23d4500a'/%3E%3C/svg%3E";
+    try{new Notification('TicketDesk — '+title,{body:body,icon:ICON});}catch(e){}
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────
+function toast(msg,type){
+  var el=document.createElement('div');el.className='toast-item';
+  el.innerHTML='<span style="color:'+(type==='ok'?'#3fb950':'#f85149')+'">&#9679;</span> '+msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(function(){el.remove();},3500);
+}
+
+
+// ══ BOT DE SOPORTE TI ══════════════════════════════
+var botOpen      = false;
+var botLastTopic = null;
+var botTyping    = false;
+var botHistory   = [];
+var botGreeted   = false;
+var API_KEY_BOT  = '';  // Se lee de cfg.apiKey si está disponible
+
+var BOT_FAQ = [
+  {
+    keys: ['sap','dump','st22','abap','error sap'],
+    title: 'Error DUMP en SAP',
+    answer: 'Los dumps SAP (ST22) ocurren por errores en el código ABAP. Pasos iniciales:',
+    steps: ['Anota el nombre del dump y la transacción donde ocurre','Toma captura de pantalla del error','Verifica si el problema es solo tu usuario o afecta a todos','Reporta el ticket con estos datos — el equipo SAP lo atenderá'],
+    suggest: ['¿Cómo reportar un ticket?','¿Qué información incluir?','Hablar con soporte'],
+  },
+  {
+    keys: ['no puedo entrar','acceso','permiso','denegado','transaccion','me21n','mm60','su01'],
+    title: 'Acceso denegado en SAP',
+    answer: 'Los problemas de acceso en SAP son por roles o permisos. Para resolverlo:',
+    steps: ['Verifica que estés en el mandante correcto (ej. 100 = producción)','Anota la transacción exacta que no puedes abrir','Confirma si antes sí podías acceder','Crea un ticket — el administrador asignará el rol en SU01'],
+    suggest: ['¿Cómo crear un ticket?','Cambio de contraseña SAP','Hablar con soporte'],
+  },
+  {
+    keys: ['internet','red','wifi','conectividad','sin conexion','no carga','lento'],
+    title: 'Problemas de conectividad',
+    answer: 'Sigue estos pasos para diagnosticar problemas de red:',
+    steps: ['Reinicia tu equipo y el router/switch de tu área','Verifica que el cable de red esté bien conectado','Prueba abrir otra página web para confirmar si es general','Si el problema persiste más de 5 minutos, crea un ticket urgente'],
+    suggest: ['Crear ticket urgente','¿Es un problema general?','Hablar con soporte'],
+  },
+  {
+    keys: ['impresora','imprimir','zebra','no imprime','atascada','papel'],
+    title: 'Impresora sin funcionar',
+    answer: 'Soluciones rápidas para problemas de impresora:',
+    steps: ['Apaga la impresora 30 segundos y vuelve a encenderla','Verifica que haya papel y no haya atascos','En Windows: Panel de control → Dispositivos → clic derecho → Ver trabajos en cola → Cancelar todos','Si sigue sin funcionar, crea un ticket con el nombre de la impresora y tu área'],
+    suggest: ['Crear ticket de hardware','¿Cómo cancelar trabajos?','Hablar con soporte'],
+  },
+  {
+    keys: ['contrasena','contraseña','password','olvide','expiró','caducó','cambiar clave'],
+    title: 'Cambio de contraseña',
+    answer: 'Para problemas con contraseñas:',
+    steps: ['Contraseña de Windows: contacta a TI para restablecerla (no se puede hacer solo)','Contraseña SAP: usa la transacción SU3 dentro de SAP si aún puedes entrar','Si estás bloqueado: crea un ticket urgente con tu nombre completo y número de empleado','Tu cuenta se bloquea tras 5 intentos fallidos'],
+    suggest: ['Crear ticket urgente','Políticas de contraseñas','Hablar con soporte'],
+  },
+  {
+    keys: ['correo','outlook','email','no llegan','no puedo enviar','buzon'],
+    title: 'Problemas con Outlook',
+    answer: 'Soluciones para Outlook:',
+    steps: ['Verifica tu conexión a internet primero','Cierra y vuelve a abrir Outlook','Si dice "Trabajando sin conexión": pestaña Enviar y recibir → Trabajar sin conexión (desactivar)','Espera 2-3 minutos a que sincronice. Si persiste, crea un ticket'],
+    suggest: ['Crear ticket','¿Cómo configurar Outlook?','Hablar con soporte'],
+  },
+  {
+    keys: ['lento','computadora lenta','pc lenta','tarda','cuelga','se congela','ram'],
+    title: 'Equipo lento o cuelgues',
+    answer: 'Para mejorar el rendimiento del equipo:',
+    steps: ['Reinicia el equipo (no solo apagar pantalla)','Cierra programas que no estés usando','Verifica espacio en disco: Explorador → clic derecho en C: → Propiedades','Si tiene menos de 10% libre, crea ticket para limpieza','Si el problema es frecuente, crea un ticket con el número de equipo (en una etiqueta en la PC)'],
+    suggest: ['Crear ticket','¿Cómo ver el número de equipo?','Hablar con soporte'],
+  },
+  {
+    keys: ['crear ticket','reportar','abrir caso','nuevo ticket','reportar problema'],
+    title: '¿Cómo crear un ticket?',
+    answer: 'Para reportar un problema:',
+    steps: ['Haz clic en el botón + Nuevo ticket (arriba a la derecha)','Escribe el título del problema brevemente','Describe el problema con detalle: ¿qué pasa? ¿desde cuándo? ¿qué equipo?','Selecciona la urgencia y el área afectada','Presiona Enviar — recibirás notificación cuando sea atendido'],
+    suggest: ['Crear ticket ahora','Seguimiento de mis tickets','Hablar con soporte'],
+  },
+  {
+    keys: ['seguimiento','estado','mi ticket','como va','cuando','resuelto'],
+    title: 'Seguimiento de tickets',
+    answer: 'Para ver el estado de tus tickets:',
+    steps: ['En el portal verás todos tus tickets en la lista principal','El estado cambia: Abierto → En progreso → Resuelto','Puedes agregar comentarios o preguntas desde el detalle del ticket','Recibirás notificación push cuando haya cambios (si las activaste)'],
+    suggest: ['Ver mis tickets','Activar notificaciones','Hablar con soporte'],
+  },
+];
+
+var BOT_SUGGESTIONS_INIT = [
+  'Error en SAP',
+  'Sin acceso a sistema',
+  'Impresora no imprime',
+  'Internet lento',
+  'Cambio de contraseña',
+  'Crear un ticket',
+];
+
+function toggleBot() {
+  botOpen = !botOpen;
+  var win = document.getElementById('bot-window');
+  var icon = document.getElementById('bot-fab-icon');
+  var badge = document.getElementById('bot-badge');
+  if (botOpen) {
+    win.classList.add('open');
+    icon.textContent = '✕';
+    badge.style.display = 'none';
+    if (!botGreeted) { botGreeted = true; botWelcome(); checkAdminBotBtn(); }
+  _sActive=true; sessionStart();
+    setTimeout(function(){ document.getElementById('bot-inp').focus(); }, 200);
+  } else {
+    win.classList.remove('open');
+    icon.textContent = '🤖';
+  }
+}
+
+function botWelcome() {
+  var name = currentUser ? currentUser.name.split(' ')[0] : 'Usuario';
+  botAddMsg('bot', '¡Hola ' + name + '! 👋 Soy el asistente de soporte TI de Manufacturas Eliot.\n\nPuedo ayudarte con problemas comunes y crear tickets. ¿En qué te puedo ayudar?');
+  setTimeout(function(){
+    renderBotSuggestions(BOT_SUGGESTIONS_INIT);
+  }, 600);
+}
+
+function botAddMsg(role, text, card) {
+  var msgs = document.getElementById('bot-msgs');
+  if (!msgs) return;
+
+  var now = new Date().toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit'});
+  var wrapper = document.createElement('div');
+  wrapper.className = 'bot-msg ' + role;
+
+  var av = document.createElement('div');
+  av.className = 'bot-msg-av';
+  av.style.background = role === 'bot' ? '#1a1917' : (currentUser ? currentUser.color || '#d4500a' : '#d4500a');
+  av.textContent = role === 'bot' ? '🤖' : (currentUser ? currentUser.av || 'U' : 'U');
+
+  var right = document.createElement('div');
+  var bubble = document.createElement('div');
+  bubble.className = 'bot-bubble';
+
+  // Handle \n in text
+  text.split('\n').forEach(function(line, i) {
+    if (i > 0) bubble.appendChild(document.createElement('br'));
+    bubble.appendChild(document.createTextNode(line));
+  });
+
+  // Append card if provided
+  if (card) {
+    var cardEl = document.createElement('div');
+    cardEl.className = 'bot-card';
+    var cardTitle = document.createElement('div');
+    cardTitle.className = 'bot-card-title';
+    cardTitle.textContent = '📋 ' + card.title;
+    cardEl.appendChild(cardTitle);
+    card.steps.forEach(function(step, i) {
+      var row = document.createElement('div');
+      row.className = 'bot-card-step';
+      var num = document.createElement('div');
+      num.className = 'bot-card-num';
+      num.textContent = i + 1;
+      var txt = document.createElement('span');
+      txt.textContent = step;
+      row.appendChild(num); row.appendChild(txt);
+      cardEl.appendChild(row);
+    });
+    bubble.appendChild(cardEl);
+
+    // Escalate option
+    var esc = document.createElement('div');
+    esc.className = 'bot-escalate';
+    esc.innerHTML = '<span style="font-size:16px">🎫</span><div><div style="font-weight:500;color:var(--accent)">¿No se resolvió? Crear ticket</div><div style="color:var(--text2)">Un especialista te atenderá pronto</div></div><span style="margin-left:auto;color:var(--text3)">›</span>';
+    esc.addEventListener('click', function(){ botLastTopic = card.title; botGuardarEvidencia(false); botCreateTicketFlow(card.title); });
+    bubble.appendChild(esc);
+  }
+
+  var time = document.createElement('div');
+  time.className = 'bot-time';
+  time.textContent = now;
+
+  right.appendChild(bubble);
+  right.appendChild(time);
+
+  if (role === 'bot') {
+    wrapper.appendChild(av);
+    wrapper.appendChild(right);
+  } else {
+    wrapper.appendChild(right);
+    wrapper.appendChild(av);
+  }
+
+  msgs.appendChild(wrapper);
+  msgs.scrollTop = msgs.scrollHeight;
+  botHistory.push({ role, text });
+}
+
+function botShowTyping() {
+  var msgs = document.getElementById('bot-msgs');
+  var el = document.createElement('div');
+  el.className = 'bot-msg bot';
+  el.id = 'bot-typing-indicator';
+  var av = document.createElement('div');
+  av.className = 'bot-msg-av';
+  av.style.background = '#1a1917';
+  av.textContent = '🤖';
+  var typing = document.createElement('div');
+  typing.className = 'bot-typing';
+  for (var i = 0; i < 3; i++) {
+    var s = document.createElement('span'); typing.appendChild(s);
+  }
+  el.appendChild(av); el.appendChild(typing);
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function botHideTyping() {
+  var el = document.getElementById('bot-typing-indicator');
+  if (el) el.remove();
+}
+
+function renderBotSuggestions(sugs) {
+  var el = document.getElementById('bot-sugs');
+  if (!el) return;
+  el.innerHTML = '';
+  sugs.forEach(function(s) {
+    var btn = document.createElement('button');
+    btn.className = 'bot-sug';
+    btn.textContent = s;
+    btn.addEventListener('click', function() { botHandleInput(s); });
+    el.appendChild(btn);
+  });
+}
+
+function botSend() {
+  var inp = document.getElementById('bot-inp');
+  var text = inp.value.trim();
+  if (!text || botTyping) return;
+  inp.value = '';
+  botHandleInput(text);
+}
+
+function botHandleInput(text) {
+  botAddMsg('user', text);
+  document.getElementById('bot-sugs').innerHTML = '';
+  botTyping = true;
+  botShowTyping();
+
+  var delay = 800 + Math.random() * 600;
+  setTimeout(function() {
+    botHideTyping();
+    botTyping = false;
+    botProcess(text.toLowerCase());
+  }, delay);
+}
+
+function botProcess(input) {
+  // 0. Explicit resolution confirmation
+  if (input === '✅ sí, se resolvió' || input === '✅ si, se resolvio' || /^s[ií],?\s*(ya\s+)?(se\s+)?(resolv|arregl|funcion)/i.test(input)) {
+    botAddMsg('bot', '¡Perfecto! Me alegra mucho. 🎉');
+    setTimeout(function(){ botGuardarEvidencia(true); }, 600);
+    return;
+  }
+
+  // 1. Check for ticket creation intent
+  if (/crear ticket|abrir caso|reportar|nuevo ticket|hacer ticket/i.test(input)) {
+    botCreateTicketFlow(null);
+    return;
+  }
+
+  // 2. Check for escalation / talk to human
+  if (/hablar con|agente|persona|humano|soporte directo|escalar|urgente ahora/i.test(input)) {
+    botEscalate();
+    return;
+  }
+
+  // 3. Check for resolution confirmation
+  if (/gracias|thank|ok bien|perfecto|listo|resuelto|ya funciona|se arreglo|se arregló|funcionó|funciono/i.test(input)) {
+    botAddMsg('bot', '¡Excelente! Me alegra que se haya resuelto. 🎉\n\nVoy a registrar esta conversación como evidencia de soporte...');
+    setTimeout(function(){ botGuardarEvidencia(true); }, 1000);
+    return;
+  }
+
+  // 4. Search FAQ
+  var matched = null;
+  var maxScore = 0;
+  BOT_FAQ.forEach(function(faq) {
+    var score = 0;
+    faq.keys.forEach(function(k) { if (input.includes(k)) score += k.length; });
+    if (score > maxScore) { maxScore = score; matched = faq; }
+  });
+
+  if (matched && maxScore > 2) {
+    botLastTopic = matched.title;
+    botAddMsg('bot', matched.answer, matched);
+    var sugs = (matched.suggest || []).slice();
+    if (!sugs.includes('✅ Sí, se resolvió')) sugs.unshift('✅ Sí, se resolvió');
+    renderBotSuggestions(sugs);
+    return;
+  }
+
+  // 5. Use Anthropic AI if API key available
+  var apiKey = (typeof cfg !== 'undefined' && cfg.apiKey) ? cfg.apiKey : '';
+  if (apiKey && apiKey.startsWith('sk-')) {
+    botAskAI(input, apiKey);
+    return;
+  }
+
+  // 6. Fallback
+  botAddMsg('bot', 'No encontré una solución exacta para eso. 🤔\n\nPuedo ayudarte de estas formas:');
+  renderBotSuggestions(['Crear un ticket', 'Error en SAP', 'Sin conexión', 'Hablar con soporte']);
+}
+
+function botAskAI(input, apiKey) {
+  botTyping = true;
+  botShowTyping();
+  var systemPrompt = 'Eres el asistente de soporte TI de Manufacturas Eliot. Ayudas a usuarios finales (no técnicos) con problemas de SAP, red, hardware, software e impresoras. Responde en español, de forma amigable y concisa (máximo 3 oraciones). Si el problema requiere intervención técnica, sugiere crear un ticket. No uses markdown, solo texto plano.';
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 200,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: input }]
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    botHideTyping(); botTyping = false;
+    var reply = (data.content||[]).map(function(c){return c.text||'';}).join('').trim();
+    if (reply) {
+      botAddMsg('bot', reply);
+      renderBotSuggestions(['Crear un ticket', 'Eso no funcionó', 'Hablar con soporte']);
+    } else {
+      botFallback();
+    }
+  })
+  .catch(function(){
+    botHideTyping(); botTyping = false;
+    botFallback();
+  });
+}
+
+function botFallback() {
+  botAddMsg('bot', 'Lo siento, no pude procesar tu consulta en este momento. Te recomiendo crear un ticket para que un especialista te ayude directamente.');
+  renderBotSuggestions(['Crear ticket ahora', 'Hablar con soporte']);
+}
+
+
+function botGuardarEvidencia(resuelto) {
+  if (!currentUser) return;
+
+  // Build conversation transcript
+  var transcript = botHistory.map(function(m) {
+    return (m.role === 'bot' ? '🤖 Asistente' : '👤 ' + currentUser.name) + ': ' + m.text;
+  }).join('\n');
+
+  // Find what topic was discussed (last FAQ matched)
+  var topic = botLastTopic || 'Consulta de soporte';
+  var now   = new Date().toISOString();
+  var all   = getAllTickets();
+
+  var tk = {
+    id:         nid(),
+    title:      (resuelto ? '[RESUELTO BOT] ' : '[BOT] ') + topic,
+    desc:       '--- Ticket generado automáticamente por el Asistente de Soporte ---\n\n'
+                + 'Resuelto por: ' + (resuelto ? 'Asistente virtual (sin intervención de TI)' : 'Pendiente de revisión') + '\n'
+                + 'Usuario: ' + currentUser.name + ' (' + currentUser.dept + ')\n'
+                + 'Fecha: ' + new Date().toLocaleString('es-MX') + '\n\n'
+                + '=== TRANSCRIPCIÓN DEL CHAT ===\n\n' + transcript,
+    category:   'Otro',
+    priority:   'Baja',
+    status:     resuelto ? 'Resuelto' : 'Abierto',
+    assignee:   '',
+    createdBy:  currentUser.username,
+    requester:  currentUser.name,
+    dept:       currentUser.dept || '',
+    tags:       resuelto ? 'bot-resuelto,autoservicio' : 'bot,pendiente',
+    created:    now,
+    updated:    now,
+    comments:   [],
+    audit: [
+      {
+        ts:     now,
+        user:   'Asistente TI (Bot)',
+        action: resuelto
+          ? 'Caso resuelto por el asistente virtual sin intervención de soporte'
+          : 'Conversación iniciada con el asistente virtual',
+        color:  resuelto ? '#1a7a4a' : '#1a5fa8'
+      }
+    ],
+    survey: resuelto ? {
+      rating:  5,
+      comment: 'Resuelto por el asistente de soporte virtual.',
+      date:    now
+    } : null,
+    timeLog: [],
+    botSession: true,
+  };
+
+  all.unshift(tk);
+  saveTickets(all);
+  renderList();
+
+  if (resuelto) {
+    botAddMsg('bot',
+      '✅ ¡Listo! Guardé la evidencia de esta sesión.\n\n'
+      + '📋 Ticket creado: ' + tk.id + '\n'
+      + 'Estado: Resuelto por asistente virtual\n\n'
+      + 'Puedes consultarlo en la sección "Mis tickets". '
+      + '¿Necesitas ayuda con algo más?'
+    );
+    toast('Evidencia guardada — ' + tk.id, 'ok');
+  } else {
+    botAddMsg('bot',
+      '📋 Registré esta conversación en el ticket ' + tk.id + '\n'
+      + 'Un especialista la revisará y te contactará pronto.'
+    );
+  }
+  renderBotSuggestions(['Ver mis tickets', 'Otro problema', 'Crear ticket adicional']);
+}
+
+function botCreateTicketFlow(topic) {
+  if (!currentUser) {
+    botAddMsg('bot', 'Para crear un ticket necesitas iniciar sesión primero.');
+    return;
+  }
+  var titlePrefill = topic ? topic : '';
+  botAddMsg('bot', '¡Perfecto! Voy a abrir el formulario de ticket para ti' + (topic ? ' sobre: ' + topic : '') + '.\n\nDescribe el problema con el mayor detalle posible para que el equipo pueda ayudarte más rápido.');
+  setTimeout(function(){
+    // Trigger the new ticket modal with prefilled data
+    abrirNuevoTicket();
+    if (titlePrefill && document.getElementById('f-title')) {
+      document.getElementById('f-title').value = titlePrefill;
+    }
+    renderBotSuggestions(['Ya lo creé ✓', '¿Cómo describirlo bien?']);
+  }, 1200);
+}
+
+function botEscalate() {
+  botAddMsg('bot', 'Entendido. Voy a conectarte con el equipo de soporte TI. 👨‍💻\n\nRegistrando la conversación y creando ticket...');
+  setTimeout(function(){ botGuardarEvidencia(false); }, 800);
+  setTimeout(function(){
+    var esc = document.createElement('div');
+    esc.className = 'bot-msg bot';
+    var av = document.createElement('div');
+    av.className = 'bot-msg-av';
+    av.style.background = '#1a1917';
+    av.textContent = '🤖';
+    var right = document.createElement('div');
+    var bubble = document.createElement('div');
+    bubble.className = 'bot-bubble';
+    var card = document.createElement('div');
+    card.className = 'bot-escalate';
+    card.style.marginTop = '0';
+    card.innerHTML = '<span style="font-size:18px">🎫</span><div><div style="font-weight:500;color:var(--accent)">Crear ticket de soporte</div><div style="color:var(--text2)">Tiempo de respuesta: según prioridad</div></div><span style="margin-left:auto">›</span>';
+    card.addEventListener('click', function(){ botCreateTicketFlow(null); });
+    bubble.appendChild(card);
+    right.appendChild(bubble);
+    esc.appendChild(av); esc.appendChild(right);
+    var msgs = document.getElementById('bot-msgs');
+    if (msgs) { msgs.appendChild(esc); msgs.scrollTop = msgs.scrollHeight; }
+    renderBotSuggestions(['Crear ticket urgente', 'Crear ticket normal']);
+  }, 500);
+}
+
+// Show badge after 3 seconds to attract attention
+setTimeout(function(){
+  var badge = document.getElementById('bot-badge');
+  if (badge && !botOpen) { badge.style.display = 'flex'; badge.textContent = '1'; }
+}, 3000);
+
+
+// ══ BOT UPGRADES ═══════════════════════════════════
+
+// ── Horario de atención ─────────────────────────────
+var SUPPORT_HOURS = { start: 8, end: 18, days: [1,2,3,4,5] }; // Lunes-Viernes 8-18h
+
+function isSupportAvailable() {
+  var now  = new Date();
+  var hour = now.getHours();
+  var day  = now.getDay();
+  return SUPPORT_HOURS.days.includes(day) &&
+         hour >= SUPPORT_HOURS.start &&
+         hour < SUPPORT_HOURS.end;
+}
+
+function getSupportScheduleMsg() {
+  var now  = new Date();
+  var day  = now.getDay();
+  var hour = now.getHours();
+  var days = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  if (!SUPPORT_HOURS.days.includes(day)) {
+    return 'Hoy es ' + days[day] + ' — el soporte humano no está disponible los fines de semana. Puedo ayudarte yo o puedes crear un ticket para atención el lunes.';
+  }
+  if (hour < SUPPORT_HOURS.start) {
+    return 'El soporte humano inicia a las ' + SUPPORT_HOURS.start + ':00h. Por ahora puedo ayudarte yo.';
+  }
+  if (hour >= SUPPORT_HOURS.end) {
+    return 'El horario de soporte TI terminó a las ' + SUPPORT_HOURS.end + ':00h. Puedes crear un ticket y será atendido mañana.';
+  }
+  return null; // available
+}
+
+// ── Detección de tono ───────────────────────────────
+function detectTone(input) {
+  var lower = input.toLowerCase();
+  if (/urgente|urgentísimo|ya no puedo|bloqueado|producción parada|no funciona nada|todo mal|desesperado|auxilio/.test(lower))
+    return 'urgent';
+  if (/no sirve|inútil|pesimo|pésimo|tardanza|nunca funciona|harto|enojado|molesto|ridículo|incompetente/.test(lower))
+    return 'angry';
+  if (/no entiendo|no sé|no se|confundido|perdido|cómo|como se|qué es|que es/.test(lower))
+    return 'confused';
+  return 'normal';
+}
+
+function getToneBanner(tone) {
+  var banners = {
+    urgent: { bg:'var(--red-l)', color:'var(--red)', border:'#f0c4c0',
+              icon:'🚨', text:'Detecté que es urgente — voy a darte prioridad máxima.' },
+    angry:  { bg:'var(--yellow-l)', color:'var(--yellow)', border:'#f0d98a',
+              icon:'😤', text:'Entiendo tu frustración. Voy a hacer todo lo posible para ayudarte ahora.' },
+    confused: { bg:'var(--blue-l)', color:'var(--blue)', border:'#b5d4f4',
+               icon:'🤔', text:'No hay problema. Te explico paso a paso.' },
+  };
+  return banners[tone] || null;
+}
+
+// ── SAP Knowledge Base ──────────────────────────────
+var SAP_FAQ = [
+  {
+    keys: ['se01','se09','se10','orden transporte','transport'],
+    title: 'Órdenes de transporte SAP',
+    answer: 'Las órdenes de transporte mueven cambios entre sistemas (DEV→QAS→PRD).',
+    steps: [
+      'SE01 — ver y gestionar tus órdenes de transporte',
+      'SE09 — órdenes de tipo Workbench (ABAP, diccionario)',
+      'SE10 — órdenes de tipo Customizing (configuración)',
+      'Para liberar: abre la orden, verifica que esté completa y usa el botón de camión ▶',
+      'Si no puedes liberar, puede haber objetos bloqueados — avisa al líder SAP',
+    ],
+    chips: ['SE01','SE09','SE10','Liberar orden','Bloqueo de objetos'],
+    image: null,
+  },
+  {
+    keys: ['sm21','syslog','log sistema','error sistema'],
+    title: 'Log del sistema SAP (SM21)',
+    answer: 'SM21 muestra el registro de eventos del sistema SAP.',
+    steps: [
+      'Accede a SM21 en SAP',
+      'Selecciona el rango de fecha/hora donde ocurrió el error',
+      'Filtra por tipo de mensaje: Error (E) o Aviso (W)',
+      'Copia el texto del error y compártelo al crear el ticket',
+    ],
+    chips: ['SM21','SM37','SM66','SM50'],
+    image: null,
+  },
+  {
+    keys: ['sm37','job','background job','tarea fondo','trabajo fondo','batch'],
+    title: 'Jobs en background (SM37)',
+    answer: 'Los jobs en fondo ejecutan procesos automáticamente en SAP.',
+    steps: [
+      'SM37 — ver todos los jobs programados y su estado',
+      'Estados: Activo (A), Terminado (F), Cancelado (X), Programado (S)',
+      'Si un job está cancelado (X): revisa el log con botón "Log de job"',
+      'Para reprogramar: selecciona el job → Copiar job → ajusta fecha/hora',
+      'Si es un job crítico de producción, crea un ticket urgente',
+    ],
+    chips: ['SM37','Ver log','Job cancelado','Reprogramar'],
+    image: null,
+  },
+  {
+    keys: ['spro','customizing','configuración sap','tabla configuración','img'],
+    title: 'Customizing SAP (SPRO)',
+    answer: 'SPRO es el acceso a la configuración del sistema SAP.',
+    steps: [
+      'Solo usuarios autorizados pueden acceder a SPRO',
+      'Los cambios en SPRO deben ir en órdenes de Customizing (SE10)',
+      'NUNCA modifiques SPRO en producción directamente',
+      'Los cambios van: DEV → transportar → QAS → probar → PRD',
+      'Si necesitas un cambio de configuración, crea un ticket con la especificación',
+    ],
+    chips: ['SPRO','SE10','Transportar','Configuración'],
+    image: null,
+  },
+  {
+    keys: ['su53','falta autorizacion','falta autorización','objeto autorizacion','no autorizado'],
+    title: 'Falta de autorización SAP (SU53)',
+    answer: 'SU53 muestra exactamente qué autorización te falta en SAP.',
+    steps: [
+      'Después del error de autorización, ejecuta la transacción SU53',
+      'Verás el objeto de autorización faltante (ej. F_BKPF_BUK)',
+      'Toma captura de pantalla de SU53',
+      'Crea un ticket adjuntando la captura — el admin asignará el rol correcto',
+      'Proceso tarda 24-48h en entornos productivos',
+    ],
+    chips: ['SU53','SU01','Roles SAP','PFCG'],
+    image: null,
+  },
+  {
+    keys: ['va01','va02','va03','orden venta','pedido cliente','sd'],
+    title: 'Órdenes de venta SAP SD',
+    answer: 'Transacciones del módulo SD para ventas.',
+    steps: [
+      'VA01 — Crear orden de venta',
+      'VA02 — Modificar orden de venta existente',
+      'VA03 — Ver orden de venta (solo lectura)',
+      'Si no puedes crear/modificar: verifica en SU53 qué autorización falta',
+      'Errores de datos maestros (cliente, material): contactar al equipo SD',
+    ],
+    chips: ['VA01','VA02','VA03','VA05','VL01N'],
+    image: null,
+  },
+  {
+    keys: ['me21n','me22n','me23n','orden compra','migo','mm60','mm'],
+    title: 'Compras y materiales SAP MM',
+    answer: 'Transacciones del módulo MM para compras y materiales.',
+    steps: [
+      'ME21N — Crear orden de compra',
+      'ME22N — Modificar orden de compra',
+      'MIGO — Entrada de mercancía',
+      'MM60 — Inventario de materiales',
+      'MIRO — Verificación de facturas de proveedor',
+      'Si hay error de precio o cantidad: revisa el pedido en ME23N primero',
+    ],
+    chips: ['ME21N','MIGO','MIRO','MM03','MB52'],
+    image: null,
+  },
+  {
+    keys: ['fb01','fb50','f110','pago','banco','fico','contabilidad','asiento'],
+    title: 'Contabilidad y finanzas SAP FI',
+    answer: 'Transacciones del módulo FI para contabilidad.',
+    steps: [
+      'FB01 — Registrar documento contable',
+      'FB50 — Registrar asiento con plantilla',
+      'F110 — Propuesta de pagos automática',
+      'FS10N — Balance de cuenta contable',
+      'FBL3N — Partidas individuales de cuenta mayor',
+      'Para errores en documentos contables ya contabilizados: requiere estorno (FB08)',
+    ],
+    chips: ['FB01','FB50','F110','FS10N','FB08'],
+    image: null,
+  },
+];
+
+// ── Diagnóstico guiado ──────────────────────────────
+var diagState = null; // null | {flow, step, data}
+
+var DIAG_FLOWS = {
+  sap_general: {
+    name: 'Problema en SAP',
+    questions: [
+      { id:'modulo', text:'¿En qué módulo o área de SAP ocurre el problema?',
+        options:['SD - Ventas','MM - Compras/Materiales','FI/CO - Contabilidad','ABAP/Técnico','HR - Recursos Humanos','No sé el módulo'] },
+      { id:'tipo', text:'¿Qué tipo de problema es?',
+        options:['Error / Dump','Sin acceso / Autorización','Datos incorrectos','Sistema lento','Job cancelado','Otro'] },
+      { id:'impacto', text:'¿Cuántos usuarios están afectados?',
+        options:['Solo yo','Mi área (2-10 usuarios)','Varias áreas','Toda la empresa'] },
+      { id:'desde', text:'¿Desde cuándo ocurre?',
+        options:['Ahora mismo (primera vez)','Hoy','Ayer o antes de ayer','Hace más de una semana'] },
+    ],
+    resolve: function(data) {
+      var priority = data.impacto === 'Toda la empresa' ? 'Crítica' :
+                     data.impacto === 'Varias áreas'    ? 'Alta'    :
+                     data.impacto === 'Mi área (2-10 usuarios)' ? 'Alta' : 'Media';
+      return {
+        summary: 'Problema SAP: ' + data.modulo + ' — ' + data.tipo,
+        priority: priority,
+        tags: 'sap,diagnostico,' + (data.tipo||'').toLowerCase().replace(/\s+/g,'-'),
+        recommendation: priority === 'Crítica' || priority === 'Alta'
+          ? 'Por el impacto detectado, te recomiendo crear un ticket de prioridad ' + priority + ' inmediatamente.'
+          : 'Crearé un ticket con prioridad ' + priority + ' basado en el diagnóstico.',
+      };
+    },
+  },
+  hardware: {
+    name: 'Problema de hardware',
+    questions: [
+      { id:'dispositivo', text:'¿Qué dispositivo tiene el problema?',
+        options:['PC / Laptop','Monitor','Teclado / Mouse','Impresora','USB / Periférico','Teléfono de escritorio'] },
+      { id:'sintoma', text:'¿Qué síntoma presenta?',
+        options:['No enciende','Se congela','Hace ruido extraño','No lo reconoce Windows','Pantalla falla','Otro'] },
+      { id:'reinicio', text:'¿Ya intentaste reiniciar el equipo?',
+        options:['Sí, no funciona','No he reiniciado','Reinicia pero vuelve a fallar'] },
+    ],
+    resolve: function(data) {
+      return {
+        summary: 'Falla de hardware: ' + data.dispositivo + ' — ' + data.sintoma,
+        priority: data.sintoma === 'No enciende' ? 'Alta' : 'Media',
+        tags: 'hardware,diagnostico,' + (data.dispositivo||'').toLowerCase().replace(/\s+/g,'-'),
+        recommendation: data.reinicio === 'No he reiniciado'
+          ? 'Primero intenta reiniciar. Si persiste, crearé el ticket.'
+          : 'Basado en el diagnóstico, necesitas atención de soporte presencial.',
+      };
+    },
+  },
+};
+
+function startDiagnosis(flowKey) {
+  var flow = DIAG_FLOWS[flowKey];
+  if (!flow) return;
+  diagState = { flowKey: flowKey, flow: flow, step: 0, data: {} };
+  botAddMsg('bot', '🔍 Diagnóstico guiado — ' + flow.name + '\n\nTe haré ' + flow.questions.length + ' preguntas rápidas para identificar mejor el problema.');
+  setTimeout(function(){ askDiagQuestion(); }, 600);
+}
+
+function askDiagQuestion() {
+  if (!diagState) return;
+  var q = diagState.flow.questions[diagState.step];
+  if (!q) { finishDiagnosis(); return; }
+  botAddMsg('bot', '(' + (diagState.step+1) + '/' + diagState.flow.questions.length + ') ' + q.text);
+  renderBotSuggestions(q.options.concat(['⏩ Omitir', '❌ Cancelar diagnóstico']));
+}
+
+function handleDiagAnswer(answer) {
+  if (!diagState) return false;
+  if (answer === '❌ Cancelar diagnóstico') {
+    diagState = null;
+    botAddMsg('bot', 'Diagnóstico cancelado. ¿En qué más puedo ayudarte?');
+    renderBotSuggestions(BOT_SUGGESTIONS_INIT);
+    return true;
+  }
+  var q = diagState.flow.questions[diagState.step];
+  if (answer !== '⏩ Omitir' && q) diagState.data[q.id] = answer;
+  diagState.step++;
+  if (diagState.step < diagState.flow.questions.length) {
+    setTimeout(function(){ askDiagQuestion(); }, 400);
+  } else {
+    setTimeout(function(){ finishDiagnosis(); }, 400);
+  }
+  return true;
+}
+
+function finishDiagnosis() {
+  if (!diagState) return;
+  var result = diagState.flow.resolve(diagState.data);
+  botLastTopic = result.summary;
+  botAddMsg('bot', '✅ Diagnóstico completado.\n\n' + result.recommendation);
+  // Auto-create ticket with diagnosis data
+  setTimeout(function(){
+    var all = getAllTickets();
+    var now = new Date().toISOString();
+    var diagDetail = Object.entries(diagState.data).map(function(e){
+      var q = diagState.flow.questions.find(function(q){return q.id===e[0];});
+      return '• ' + (q?q.text:e[0]) + ': ' + e[1];
+    }).join('\n');
+    var tk = {
+      id: nid(), title: '[DIAGNÓSTICO] ' + result.summary,
+      desc: '--- Ticket generado por diagnóstico guiado del asistente ---\n\n'
+          + 'Usuario: ' + (currentUser?currentUser.name:'') + '\n'
+          + 'Diagnóstico:\n' + diagDetail + '\n\n'
+          + 'Recomendación del bot: ' + result.recommendation,
+      category: diagState.flowKey === 'sap_general' ? 'SAP / ABAP' : 'Hardware',
+      priority: result.priority, status: 'Abierto',
+      assignee: '', createdBy: currentUser?currentUser.username:'',
+      requester: currentUser?currentUser.name:'',
+      dept: currentUser?currentUser.dept:'',
+      tags: result.tags + ',diagnostico-guiado',
+      created:now, updated:now, comments:[], survey:null, timeLog:[],
+      audit:[{ts:now,user:'Bot Diagnóstico',action:'Ticket creado por diagnóstico guiado — prioridad '+result.priority,color:'#1a5fa8'}],
+    };
+    all.unshift(tk); saveTickets(all); renderList();
+    botAddMsg('bot', '📋 Ticket creado: ' + tk.id + ' (prioridad ' + result.priority + ')\nEl equipo de TI lo atenderá según la urgencia detectada.');
+    renderBotSuggestions(['Ver mis tickets','Otro problema','Calificar esta respuesta ⭐']);
+    diagState = null;
+  }, 800);
+}
+
+// ── Rating de respuesta ─────────────────────────────
+function addBotRating(msgEl) {
+  var ratingDiv = document.createElement('div');
+  ratingDiv.className = 'bot-rating';
+  var lbl = document.createElement('span');
+  lbl.className = 'bot-rating-lbl';
+  lbl.textContent = '¿Fue útil?';
+  var yes = document.createElement('button');
+  yes.className = 'bot-rate-btn'; yes.textContent = '👍';
+  yes.title = 'Sí, fue útil';
+  var no  = document.createElement('button');
+  no.className = 'bot-rate-btn';  no.textContent = '👎';
+  no.title = 'No fue útil';
+  yes.addEventListener('click', function(){
+    yes.classList.add('selected'); no.disabled = true;
+    lbl.textContent = '¡Gracias! 😊';
+    botRatingFeedback(true);
+  });
+  no.addEventListener('click', function(){
+    no.classList.add('selected'); yes.disabled = true;
+    lbl.textContent = 'Lo mejoraremos.';
+    botRatingFeedback(false);
+  });
+  ratingDiv.appendChild(lbl);
+  ratingDiv.appendChild(yes);
+  ratingDiv.appendChild(no);
+  msgEl.querySelector('.bot-bubble').appendChild(ratingDiv);
+}
+
+function botRatingFeedback(useful) {
+  if (!useful) {
+    setTimeout(function(){
+      botAddMsg('bot', 'Entiendo que no fue suficiente. ¿Prefieres hablar con un especialista?');
+      renderBotSuggestions(['Crear ticket ahora', 'Intentar de nuevo', 'Hablar con soporte']);
+    }, 400);
+  }
+}
+
+// ── SAP Chips handler ───────────────────────────────
+function handleSapChip(chip) {
+  botHandleInput('¿Para qué sirve la transacción ' + chip + '?');
+}
+
+// Patch botAddMsg to add rating to bot responses and SAP chips
+var _origBotAddMsg = botAddMsg;
+botAddMsg = function(role, text, card) {
+  _origBotAddMsg(role, text, card);
+  if (role === 'bot' && text.length > 40 && !card) {
+    var msgs = document.getElementById('bot-msgs');
+    if (msgs && msgs.lastChild) {
+      addBotRating(msgs.lastChild);
+    }
+  }
+};
+
+// ── Patch botProcess to include new features ────────
+var _origBotProcess = botProcess;
+botProcess = function(input) {
+
+  // -1. Check learned FAQ first (highest priority)
+  if (typeof botSearchLearned === 'function') {
+    var _learnedMatch = botSearchLearned(input);
+    if (_learnedMatch) { botShowLearned(_learnedMatch); return; }
+  }
+
+  // 0. Handle active diagnosis flow
+  if (diagState) {
+    if (handleDiagAnswer(input)) return;
+  }
+
+  // 1. Detect tone first
+  var tone = detectTone(input);
+  if (tone !== 'normal') {
+    var banner = getToneBanner(tone);
+    if (banner) {
+      var msgs = document.getElementById('bot-msgs');
+      var div = document.createElement('div');
+      div.className = 'bot-tone-banner';
+      div.style.cssText = 'background:'+banner.bg+';color:'+banner.color+';border:1px solid '+banner.border+';border-radius:8px;padding:7px 12px;margin-bottom:4px;font-size:11px;font-weight:500;display:flex;align-items:center;gap:6px';
+      div.innerHTML = '<span>'+banner.icon+'</span><span>'+banner.text+'</span>';
+      if (msgs) { msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight; }
+      // If urgent — skip to escalation
+      if (tone === 'urgent') {
+        var schedMsg = getSupportScheduleMsg();
+        if (schedMsg) {
+          setTimeout(function(){
+            botAddMsg('bot', schedMsg);
+            botGuardarEvidencia(false);
+          }, 600);
+          return;
+        }
+      }
+    }
+  }
+
+  // 2. Check support schedule when escalating
+  if (/hablar con|agente|persona|humano|soporte directo/i.test(input)) {
+    var schedMsg2 = getSupportScheduleMsg();
+    if (schedMsg2) {
+      botAddMsg('bot', schedMsg2 + '\n\nDeja tu ticket y te contactaremos en el próximo horario disponible.');
+      renderBotSuggestions(['Crear ticket','¿A qué hora abren?','Otro problema']);
+      return;
+    }
+  }
+
+  // 3. Diagnóstico guiado triggers
+  if (/no sé qué pasa|no sé que pasa|ayúdame a diagnosticar|diagnosticar|identificar problema|no sé el error|diagnóstico/i.test(input)) {
+    botAddMsg('bot', '¡Claro! Puedo guiarte paso a paso para identificar el problema. ¿De qué área es el problema?');
+    renderBotSuggestions(['Problema en SAP','Problema de hardware','Problema de red','Problema de software']);
+    return;
+  }
+  if (input === 'problema en sap' || /^problema.*sap$|^sap.*problema/.test(input)) {
+    startDiagnosis('sap_general'); return;
+  }
+  if (input === 'problema de hardware' || /^problema.*hardware/.test(input)) {
+    startDiagnosis('hardware'); return;
+  }
+
+  // 4. Check SAP extended FAQ
+  var sapMatched = null; var sapScore = 0;
+  SAP_FAQ.forEach(function(faq) {
+    var score = 0;
+    faq.keys.forEach(function(k){ if (input.includes(k)) score += k.length; });
+    if (score > sapScore) { sapScore = score; sapMatched = faq; }
+  });
+
+  if (sapMatched && sapScore > 2) {
+    botLastTopic = sapMatched.title;
+    // Build response with chips
+    _origBotAddMsg('bot', sapMatched.answer, { title: sapMatched.title, steps: sapMatched.steps });
+    // Add SAP transaction chips
+    if (sapMatched.chips && sapMatched.chips.length) {
+      var msgs2 = document.getElementById('bot-msgs');
+      if (msgs2 && msgs2.lastChild) {
+        var chipsDiv = document.createElement('div');
+        chipsDiv.style.cssText = 'margin-top:8px;display:flex;flex-wrap:wrap;gap:4px';
+        sapMatched.chips.forEach(function(chip) {
+          var c = document.createElement('span');
+          c.className = 'bot-sap-chip';
+          c.textContent = chip;
+          c.addEventListener('click', function(){ handleSapChip(chip); });
+          chipsDiv.appendChild(c);
+        });
+        msgs2.lastChild.querySelector('.bot-bubble').appendChild(chipsDiv);
+      }
+    }
+    var sugs2 = ['✅ Sí, se resolvió', 'Crear ticket', 'Hablar con soporte'];
+    renderBotSuggestions(sugs2);
+    return;
+  }
+
+  // 5. Horario cuando piden soporte humano fuera de hora
+  var schedMsg3 = getSupportScheduleMsg();
+  if (schedMsg3 && /cuando|horario|hora|disponible|abierto|atienden/i.test(input)) {
+    botAddMsg('bot', '🕐 Horario de soporte TI:\n\nLunes a Viernes: 8:00 — 18:00h\n\n' + schedMsg3);
+    renderBotSuggestions(['Crear ticket','Otro problema']);
+    return;
+  }
+
+  // 6. Fall through to original
+  _origBotProcess(input);
+};
+
+// ── Patch botWelcome to check schedule ─────────────
+var _origBotWelcome = botWelcome;
+botWelcome = function() {
+  _origBotWelcome();
+  var schedMsg = getSupportScheduleMsg();
+  if (schedMsg) {
+    setTimeout(function(){
+      var div = document.createElement('div');
+      div.className = 'bot-schedule';
+      div.innerHTML = '🕐 <strong>Fuera de horario:</strong> ' + schedMsg;
+      var msgs = document.getElementById('bot-msgs');
+      if (msgs) { msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight; }
+    }, 1200);
+  }
+};
+
+
+
+// ══ BOT ADMIN + CUSTOM FAQ + AI FALLBACK ══════════
+function getCustomFAQ(){try{return JSON.parse(localStorage.getItem('bot_custom_faq')||'[]');}catch(e){return [];}}
+function saveCustomFAQ(list){localStorage.setItem('bot_custom_faq',JSON.stringify(list));}
+function openAdminPanel(){renderAdminList();clearFaqForm();var _ap=document.getElementById('admin-panel'); if(_ap) _ap.classList.add('open');}
+function closeAdminPanel(){document.getElementById('admin-panel').classList.remove('open');}
+function closeAdminIfBg(e){if(e.target===document.getElementById('admin-panel'))closeAdminPanel();}
+function sanitizeAdmin(str){return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderAdminList(){
+  var el=document.getElementById('faq-admin-list');if(!el)return;
+  var custom=getCustomFAQ(),builtin=BOT_FAQ.concat(SAP_FAQ);el.innerHTML='';
+  if(!custom.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px 0">Sin respuestas personalizadas. Agrega la primera arriba.</div>';}
+  custom.forEach(function(item,idx){
+    var div=document.createElement('div');div.className='faq-item';
+    div.innerHTML='<div class="faq-item-head"><span class="faq-item-title">'+sanitizeAdmin(item.title)+'</span><div style="display:flex;gap:5px"><span class="badge-source src-custom">Personalizada</span><button onclick="editFaq('+idx+')" style="font-size:11px;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:#fff;cursor:pointer">&#9998;</button><button onclick="deleteFaq('+idx+')" style="font-size:11px;padding:2px 7px;border-radius:4px;border:1px solid #f0c4c0;background:#fdf0ee;color:var(--red);cursor:pointer">&#215;</button></div></div><div class="faq-item-keys">Claves: '+(item.keys||[]).join(', ')+'</div>';
+    el.appendChild(div);
+  });
+  var sep=document.createElement('div');
+  sep.innerHTML='<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px">Integradas (solo lectura)</div>';
+  builtin.forEach(function(item){
+    var div=document.createElement('div');div.className='faq-item';div.style.opacity='.65';
+    div.innerHTML='<div class="faq-item-head"><span class="faq-item-title">'+sanitizeAdmin(item.title)+'</span><span class="badge-source src-builtin">Integrada</span></div><div class="faq-item-keys">Claves: '+(item.keys||[]).slice(0,4).join(', ')+'...</div>';
+    sep.appendChild(div);
+  });
+  el.appendChild(sep);
+}
+
+function addFaqStep(){
+  if(!document.getElementById('faq-steps-list'))return;
+  var list=document.getElementById('faq-steps-list'),n=list.children.length+1;
+  var row=document.createElement('div');row.className='faq-step-row';
+  row.innerHTML='<span style="font-size:11px;width:18px;text-align:center;color:var(--accent);font-weight:500;padding-top:7px;flex-shrink:0">'+n+'</span><input class="faq-step-inp" placeholder="Paso '+n+'..."><button onclick="this.parentElement.remove()" style="font-size:13px;padding:4px 8px;border-radius:4px;border:1px solid #f0c4c0;background:#fdf0ee;color:var(--red);cursor:pointer">&#215;</button>';
+  list.appendChild(row);
+}
+
+function clearFaqForm(){
+  ['faq-edit-idx','faq-keys','faq-title-inp','faq-answer'].forEach(function(id){document.getElementById(id).value='';});
+  var _fsl=document.getElementById('faq-steps-list'); if(_fsl) _fsl.innerHTML='';
+  (document.getElementById('faq-form-title')||{}).textContent='+ Nueva respuesta personalizada';
+  addFaqStep();addFaqStep();addFaqStep();
+}
+
+function editFaq(idx){
+  var item=getCustomFAQ()[idx];if(!item)return;
+  document.getElementById('faq-edit-idx').value=idx;
+  document.getElementById('faq-keys').value=(item.keys||[]).join(', ');
+  document.getElementById('faq-title-inp').value=item.title||'';
+  document.getElementById('faq-answer').value=item.answer||'';
+  document.getElementById('faq-steps-list').innerHTML='';
+  (item.steps||[]).forEach(function(s){
+    var row=document.createElement('div');row.className='faq-step-row';
+    var _fsl2=document.getElementById('faq-steps-list'); var n=(_fsl2?_fsl2.children.length:0)+1;
+    row.innerHTML='<span style="font-size:11px;width:18px;text-align:center;color:var(--accent);font-weight:500;padding-top:7px;flex-shrink:0">'+n+'</span><input class="faq-step-inp" value="'+sanitizeAdmin(s)+'"><button onclick="this.parentElement.remove()" style="font-size:13px;padding:4px 8px;border-radius:4px;border:1px solid #f0c4c0;background:#fdf0ee;color:var(--red);cursor:pointer">&#215;</button>';
+    var _fsl3=document.getElementById('faq-steps-list'); if(_fsl3) _fsl3.appendChild(row);
+  });
+  (document.getElementById('faq-form-title')||{}).textContent='Editando: '+item.title;
+  (document.getElementById('faq-edit-form')||document.body).scrollIntoView({behavior:'smooth'});
+}
+
+function deleteFaq(idx){
+  var c=getCustomFAQ();c.splice(idx,1);saveCustomFAQ(c);renderAdminList();
+  toast('Respuesta eliminada','ok');
+}
+
+function saveFaqItem(){
+  var _fkEl=document.getElementById('faq-keys'); var keys=_fkEl?_fkEl.value.trim():'';
+  var title=document.getElementById('faq-title-inp').value.trim();
+  var answer=document.getElementById('faq-answer').value.trim();
+  if(!keys||!title||!answer){toast('Completa palabras clave, título y respuesta','ok');return;}
+  var steps=[];
+  document.querySelectorAll('#faq-steps-list .faq-step-inp').forEach(function(inp){var v=inp.value.trim();if(v)steps.push(v);});
+  var item={keys:keys.split(',').map(function(k){return k.trim().toLowerCase();}).filter(Boolean),title:title,answer:answer,steps:steps,suggest:['si, se resolvio','Crear ticket','Hablar con soporte'],source:'custom'};
+  var c=getCustomFAQ(),idx=document.getElementById('faq-edit-idx').value;
+  if(idx!=='')c[parseInt(idx)]=item;else c.push(item);
+  saveCustomFAQ(c);clearFaqForm();renderAdminList();
+  toast('Respuesta guardada','ok');
+}
+
+function checkAdminBotBtn(){
+  var btn=document.getElementById('bot-admin-btn');if(!btn||!currentUser)return;
+  var isTI=currentUser.role==='admin'||currentUser.role==='agent'||(currentUser.dept&&/ti|soporte|sistemas/i.test(currentUser.dept));
+  btn.classList.toggle('visible',isTI);
+}
+
+function botAskAnthropicFull(input){
+  var apiKey=(typeof cfg!=='undefined'&&cfg&&cfg.apiKey)?cfg.apiKey:'';
+  if(!apiKey||!apiKey.startsWith('sk-'))return false;
+  botTyping=true;botShowTyping();
+  var histCtx=botHistory.slice(-6).map(function(m){return{role:m.role==='bot'?'assistant':'user',content:m.text};});
+  if(!histCtx.length||histCtx[histCtx.length-1].role!=='user')histCtx.push({role:'user',content:input});
+  var customFAQ=getCustomFAQ();
+  var customCtx=customFAQ.length?' Respuestas TI: '+customFAQ.map(function(f){return f.title+': '+f.answer;}).join(' | '):'';
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:350,
+      system:'Eres el asistente de soporte TI de Manufacturas Eliot. Ayuda a usuarios con SAP, red, hardware, software. Responde en español mexicano, amigable y conciso. Sin markdown.'+customCtx,
+      messages:histCtx})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    botHideTyping();botTyping=false;
+    var reply=(data.content||[]).map(function(c){return c.text||'';}).join('').trim();
+    if(reply){botAddMsg('bot',reply);renderBotSuggestions(['si, se resolvio','Crear ticket','No funcionó','Hablar con soporte']);}
+    else botNoMatch();
+  })
+  .catch(function(){botHideTyping();botTyping=false;botNoMatch();});
+  return true;
+}
+
+function botNoMatch(){
+  botAddMsg('bot','No encontré una solución específica. Puedo ayudarte de otra forma: guiarte con diagnóstico paso a paso, crear un ticket para un especialista o buscar en temas de SAP.');
+  renderBotSuggestions(['Diagnóstico guiado','Crear ticket','Soporte SAP','Hablar con soporte']);
+}
+
+
+
+
+
+// ======== BOT APRENDIZAJE AUTOMATICO ========
+var BOT_LEARNED_KEY='bot_learned_faq';
+function getLearnedFAQ(){try{return JSON.parse(localStorage.getItem(BOT_LEARNED_KEY)||'[]');}catch(e){return [];}}
+function saveLearnedFAQ(list){localStorage.setItem(BOT_LEARNED_KEY,JSON.stringify(list));}
+
+function botLearnFromConversation(){
+  if(!botLastTopic||botHistory.length<2) return;
+  var userMsgs=botHistory.filter(function(m){return m.role==='user';});
+  var botMsgs=botHistory.filter(function(m){return m.role==='bot';});
+  if(!userMsgs.length||!botMsgs.length) return;
+  var origQ=userMsgs[0].text;
+  var botResp=botMsgs[0].text;
+  var stop=['el','la','los','las','un','una','de','del','en','que','no','se','me','mi','es','si','ya','al','con','por','para','como','hay'];
+  var allUserText=userMsgs.map(function(m){return m.text;}).join(' ');
+  var autoKeys=allUserText.toLowerCase().replace(/[\u00bf?\u00a1!.,;:()]/g,'').split(/\s+/)
+    .filter(function(w){return w.length>2&&!stop.includes(w);}).slice(0,8)
+    .filter(function(k,i,a){return a.indexOf(k)===i;});
+  if(!autoKeys.length) return;
+  var steps=[];
+  botMsgs.forEach(function(m){
+    m.text.split(' ').forEach(function(word){}); // placeholder
+    var lines=m.text.replace(/\\n/g,'|').split('|');
+    lines.forEach(function(line){
+      line=line.trim();
+      if(/^\d+[.)]/i.test(line)) steps.push(line.replace(/^\d+[.)\s]*/,'').trim());
+    });
+  });
+  var learned=getLearnedFAQ();
+  var exists=learned.some(function(f){
+    return f.title.toLowerCase()===botLastTopic.toLowerCase()||
+           f.keys.some(function(k){return autoKeys.includes(k);});
+  });
+  if(exists){
+    learned=learned.map(function(f){
+      if(f.title.toLowerCase()===botLastTopic.toLowerCase()){
+        f.useCount=(f.useCount||1)+1;f.lastUsed=new Date().toISOString();
+      }
+      return f;
+    });
+    saveLearnedFAQ(learned);return;
+  }
+  var entry={
+    title:botLastTopic,keys:autoKeys,answer:botResp.slice(0,300),
+    steps:steps.slice(0,5),suggest:['si, se resolvio','Crear ticket','Hablar con soporte'],
+    source:'learned',learnedAt:new Date().toISOString(),
+    lastUsed:new Date().toISOString(),useCount:1,
+    originalQuestion:origQ.slice(0,120),
+  };
+  learned.unshift(entry);
+  if(learned.length>50) learned=learned.slice(0,50);
+  saveLearnedFAQ(learned);
+  var msgs=document.getElementById('bot-msgs');
+  if(msgs){
+    var note=document.createElement('div');note.className='bot-learn-notify';
+    note.innerHTML='<span style="font-size:14px">&#129302;</span>'
+      +'<span><strong>Aprendizaje guardado</strong> — Recordaré esta solución para consultas similares.</span>';
+    msgs.appendChild(note);msgs.scrollTop=msgs.scrollHeight;
+  }
+}
+
+function botSearchLearned(input){
+  var learned=getLearnedFAQ();
+  var best=null,bestScore=0;
+  learned.forEach(function(faq){
+    var score=0;
+    (faq.keys||[]).forEach(function(k){if(input.toLowerCase().includes(k))score+=k.length;});
+    if(score>bestScore){bestScore=score;best=faq;}
+  });
+  return bestScore>2?best:null;
+}
+
+function botShowLearned(best){
+  botLastTopic=best.title;
+  var all=getLearnedFAQ();
+  all=all.map(function(f){
+    if(f.title===best.title){f.useCount=(f.useCount||1)+1;f.lastUsed=new Date().toISOString();}
+    return f;
+  });
+  saveLearnedFAQ(all);
+  var cardData=(best.steps&&best.steps.length)?{title:best.title,steps:best.steps}:null;
+  _origBotAddMsg('bot',best.answer,cardData);
+  var msgs=document.getElementById('bot-msgs');
+  if(msgs&&msgs.lastChild){
+    var bubble=msgs.lastChild.querySelector('.bot-bubble');
+    if(bubble){
+      var badge=document.createElement('span');badge.className='bot-learned-badge';
+      badge.innerHTML='&#129302; Aprendido de '+best.useCount+' caso'+(best.useCount!==1?'s':'');
+      bubble.insertBefore(badge,bubble.firstChild);
+    }
+  }
+  var sugs=(best.suggest||[]).slice();
+  if(!sugs.some(function(s){return /resolv/i.test(s);}))sugs.unshift('si, se resolvio');
+  renderBotSuggestions(sugs);
+}
+
+// Patch botGuardarEvidencia to trigger learning
+var _origBotGuardarEvidenciaLearn=botGuardarEvidencia;
+botGuardarEvidencia=function(resuelto){
+  _origBotGuardarEvidenciaLearn(resuelto);
+  if(resuelto)setTimeout(function(){botLearnFromConversation();},400);
+};
+
+
+
+
+
+
+// ── UNIFIED botFallback (custom FAQ + learned + AI + noMatch) ──
+var _origBotAddMsgRef = botAddMsg;
+botFallback = function() {
+  var input = (botHistory[botHistory.length-1]||{}).text || '';
+
+  // 1. Custom FAQ (panel admin)
+  var custom = getCustomFAQ();
+  var cBest = null, cScore = 0;
+  custom.forEach(function(faq){
+    var s=0;(faq.keys||[]).forEach(function(k){if(input.toLowerCase().includes(k))s+=k.length;});
+    if(s>cScore){cScore=s;cBest=faq;}
+  });
+  if(cBest && cScore > 1){
+    botLastTopic = cBest.title;
+    botAddMsg('bot', cBest.answer, cBest);
+    var sugs=(cBest.suggest||[]).slice();
+    if(!sugs.some(function(s){return /resolv/i.test(s);}))sugs.unshift('si, se resolvio');
+    renderBotSuggestions(sugs);
+    return;
+  }
+
+  // 2. Learned FAQ
+  if (typeof botSearchLearned === 'function') {
+    var lBest = botSearchLearned(input);
+    if (lBest) { botShowLearned(lBest); return; }
+  }
+
+  // 3. AI fallback
+  if (typeof botAskAnthropicFull === 'function' && botAskAnthropicFull(input)) return;
+
+  // 4. No match
+  botNoMatch();
+};
+
+// ── Patch _origBotProcess to also check custom + learned FIRST ──
+var _botProcessBase = _origBotProcess;
+_origBotProcess = function(input) {
+  // Custom FAQ
+  var custom = getCustomFAQ();
+  var cBest = null, cScore = 0;
+  custom.forEach(function(faq){
+    var s=0;(faq.keys||[]).forEach(function(k){if(input.toLowerCase().includes(k))s+=k.length;});
+    if(s>cScore){cScore=s;cBest=faq;}
+  });
+  if(cBest && cScore > 1){
+    botLastTopic = cBest.title;
+    botAddMsg('bot', cBest.answer, cBest);
+    var sugs=(cBest.suggest||[]).slice();
+    if(!sugs.some(function(s){return /resolv/i.test(s);}))sugs.unshift('si, se resolvio');
+    renderBotSuggestions(sugs);
+    return;
+  }
+  // Learned FAQ
+  if (typeof botSearchLearned === 'function') {
+    var lBest = botSearchLearned(input);
+    if (lBest) { botShowLearned(lBest); return; }
+  }
+  // Original flow
+  _botProcessBase(input);
+};
+
+
+
+
+// ════ TICKETDESK API CLIENT ════
+/**
+ * TicketDesk API Client v2.0
+ * Maneja autenticación JWT, WebSocket, reintentos y paginación
+ * Se incluye en los 3 portales HTML para conectarse al servidor
+ */
+const TicketDeskAPI = (() => {
+  const CFG = {
+    base: localStorage.getItem('tdv2_server') || 'http://localhost:5050',
+    wsBase: (localStorage.getItem('tdv2_server') || 'http://localhost:5050')
+             .replace(/^http/, 'ws'),
+  };
+
+  let _token   = localStorage.getItem('tdv2_jwt') || null;
+  let _socket  = null;
+  let _handlers = {};
+  let _heartbeatTimer = null;
+  let _reconnectTimer = null;
+  let _pageCache = {};
+
+  // ── Auth headers ──────────────────────────────────
+  function headers() {
+    const h = { 'Content-Type': 'application/json' };
+    if (_token) h['Authorization'] = 'Bearer ' + _token;
+    return h;
+  }
+
+  // ── Fetch with retry ──────────────────────────────
+  async function apiFetch(path, opts = {}, retries = 2) {
+    const url = CFG.base + path;
+    const options = { headers: headers(), ...opts };
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const res = await fetch(url, options);
+        if (res.status === 401) { _token = null; localStorage.removeItem('tdv2_jwt'); }
+        if (res.status === 409) {
+          const data = await res.json();
+          throw Object.assign(new Error('conflict'), { conflict: true, data });
+        }
+        return await res.json();
+      } catch (e) {
+        if (e.conflict) throw e;
+        if (attempt === retries) throw e;
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+      }
+    }
+  }
+
+  // ── Login ─────────────────────────────────────────
+  async function login(username, password, company_id, portal) {
+    const data = await apiFetch('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password, company_id, portal })
+    });
+    if (data.success) {
+      _token = data.token;
+      localStorage.setItem('tdv2_jwt', _token);
+      localStorage.setItem('tdv2_user', JSON.stringify(data.user));
+      startHeartbeat(portal);
+    }
+    return data;
+  }
+
+  async function logout() {
+    try { await apiFetch('/api/auth/logout', { method: 'POST' }); } catch(e) {}
+    _token = null;
+    localStorage.removeItem('tdv2_jwt');
+    localStorage.removeItem('tdv2_user');
+    stopHeartbeat();
+    if (_socket) _socket.disconnect();
+  }
+
+  // ── Heartbeat ─────────────────────────────────────
+  function startHeartbeat(portal) {
+    stopHeartbeat();
+    _heartbeatTimer = setInterval(async () => {
+      try { await apiFetch('/api/auth/heartbeat', {
+        method: 'POST', body: JSON.stringify({ portal }) }); }
+      catch(e) {}
+    }, 60000);
+  }
+  function stopHeartbeat() {
+    if (_heartbeatTimer) clearInterval(_heartbeatTimer);
+  }
+
+  // ── Tickets (with pagination + cache) ─────────────
+  async function getTickets(filters = {}) {
+    const params = new URLSearchParams({ page:1, per_page:100, ...filters }).toString();
+    return apiFetch(`/api/tickets?${params}`);
+  }
+
+  async function getAllTicketPages(filters = {}) {
+    let page = 1, all = [];
+    while (true) {
+      const data = await getTickets({ ...filters, page, per_page: 200 });
+      if (!data.success) break;
+      all = all.concat(data.tickets || []);
+      if (page >= (data.pages || 1)) break;
+      page++;
+    }
+    return all;
+  }
+
+  async function getTicket(id)         { return apiFetch(`/api/tickets/${id}`); }
+  async function createTicket(body)    { return apiFetch('/api/tickets', { method:'POST', body:JSON.stringify(body) }); }
+  async function updateTicket(id,body) { return apiFetch(`/api/tickets/${id}`, { method:'PUT', body:JSON.stringify(body) }); }
+  async function deleteTicket(id)      { return apiFetch(`/api/tickets/${id}`, { method:'DELETE' }); }
+  async function addComment(id,text,isInternal=false) {
+    return apiFetch(`/api/tickets/${id}/comments`, { method:'POST', body:JSON.stringify({ text, is_internal:isInternal }) });
+  }
+  async function addSurvey(id,rating,comment='') {
+    return apiFetch(`/api/tickets/${id}/survey`, { method:'POST', body:JSON.stringify({ rating, comment }) });
+  }
+  async function logTime(id,seconds,note='') {
+    return apiFetch(`/api/tickets/${id}/time`, { method:'POST', body:JSON.stringify({ seconds, note }) });
+  }
+  async function getStats(company_id) {
+    const p = company_id ? `?company_id=${company_id}` : '';
+    return apiFetch(`/api/stats${p}`);
+  }
+
+  // ── Sessions ──────────────────────────────────────
+  async function getSessions()          { return apiFetch('/api/sessions'); }
+  async function kickUser(username)     { return apiFetch(`/api/sessions/${username}/kick`, { method:'POST' }); }
+  async function kickAll()              { return apiFetch('/api/sessions/kick-all', { method:'POST' }); }
+
+  // ── Config / Team / FAQ ───────────────────────────
+  async function getConfig()            { return apiFetch('/api/config'); }
+  async function saveConfig(data)       { return apiFetch('/api/config', { method:'POST', body:JSON.stringify(data) }); }
+  async function getTeam()              { return apiFetch('/api/team'); }
+  async function addTeamMember(data)    { return apiFetch('/api/team', { method:'POST', body:JSON.stringify(data) }); }
+  async function removeTeamMember(id)   { return apiFetch(`/api/team/${id}`, { method:'DELETE' }); }
+  async function getBotFAQ(q='')        { return apiFetch(`/api/bot/faq${q?'?q='+encodeURIComponent(q):''}`);}
+  async function getUsers()             { return apiFetch('/api/users'); }
+  async function createUser(data)       { return apiFetch('/api/users', { method:'POST', body:JSON.stringify(data) }); }
+  async function updateUser(u,data)     { return apiFetch(`/api/users/${u}`, { method:'PUT', body:JSON.stringify(data) }); }
+  async function deleteUser(u)          { return apiFetch(`/api/users/${u}`, { method:'DELETE' }); }
+  async function health()               { return apiFetch('/api/health'); }
+
+  // ── WebSocket (real-time) ─────────────────────────
+  function connectWS(user, onEvent) {
+    if (typeof io === 'undefined') return;
+    if (_socket) _socket.disconnect();
+
+    _socket = io(CFG.base, {
+      auth: { token: _token },
+      reconnection: true,
+      reconnectionDelay: 2000,
+      reconnectionAttempts: 10,
+      transports: ['websocket','polling']
+    });
+
+    _socket.on('connect', () => {
+      _socket.emit('join', {
+        company_id: user.company_id,
+        username:   user.username,
+        role:       user.role
+      });
+    });
+
+    const events = ['ticket_created','ticket_updated','ticket_deleted',
+                    'comment_added','user_connected','user_disconnected','kicked'];
+    events.forEach(ev => {
+      _socket.on(ev, data => {
+        if (onEvent) onEvent(ev, data);
+        const h = _handlers[ev];
+        if (h) h(data);
+      });
+    });
+
+    _socket.on('kicked', () => {
+      alert('Tu sesión fue cerrada por el administrador.');
+      logout();
+      location.reload();
+    });
+  }
+
+  function onEvent(event, handler) { _handlers[event] = handler; }
+
+  // ── Server config ─────────────────────────────────
+  function setServer(url) {
+    localStorage.setItem('tdv2_server', url);
+    CFG.base = url;
+  }
+  function getServer() { return CFG.base; }
+  function isConnected() { return !!_token; }
+  function currentUser() {
+    try { return JSON.parse(localStorage.getItem('tdv2_user') || 'null'); } catch(e) { return null; }
+  }
+
+  return {
+    login, logout, health, setServer, getServer, isConnected, currentUser,
+    getTickets, getAllTicketPages, getTicket, createTicket, updateTicket,
+    deleteTicket, addComment, addSurvey, logTime, getStats,
+    getSessions, kickUser, kickAll,
+    getConfig, saveConfig, getTeam, addTeamMember, removeTeamMember,
+    getBotFAQ, getUsers, createUser, updateUser, deleteUser,
+    connectWS, onEvent
+  };
+})();
+
+
+var _serverMode = false;
+var _tkCache    = [];
+
+function isServerMode() {
+  return _serverMode && !!localStorage.getItem('tdv2_jwt');
+}
+
+function getServerURL() {
+  return localStorage.getItem('tdv2_server') || '';
+}
+
+async function testServerURL(url) {
+  var dot = document.getElementById('srv-status-dot');
+  var lbl = document.getElementById('srv-status-lbl');
+  if (!url) {
+    if(dot) dot.className='srv-status';
+    if(lbl) lbl.textContent='Modo local — datos guardados en este navegador';
+    localStorage.removeItem('tdv2_server');
+    return;
+  }
+  localStorage.setItem('tdv2_server', url);
+  TicketDeskAPI.setServer(url);
+  if(dot) dot.className='srv-status';
+  if(lbl) lbl.textContent='Verificando...';
+  try {
+    var r = await TicketDeskAPI.health();
+    if (r && r.status === 'ok') {
+      if(dot) dot.className='srv-status ok';
+      if(lbl) lbl.textContent='Conectado — ' + r.capacity;
+    } else throw new Error('bad');
+  } catch(e) {
+    if(dot) dot.className='srv-status err';
+    if(lbl) lbl.textContent='No se pudo conectar — verifica la URL';
+  }
+}
+
+async function loadTicketsFromServer() {
+  try {
+    var data = await TicketDeskAPI.getTickets({per_page:200});
+    if (data.success) {
+      _tkCache = data.tickets || [];
+      try { localStorage.setItem('tdv2_tickets', JSON.stringify(_tkCache)); } catch(e){}
+      return true;
+    }
+  } catch(e) { _serverMode = false; }
+  return false;
+}
+
+function setupWebSocket(user) {
+  if (typeof io === 'undefined') return;
+  TicketDeskAPI.connectWS(user, function(ev, data) {
+    if (ev === 'ticket_created') {
+      if (!_tkCache.find(function(x){return x.id===data.ticket.id;}))
+        _tkCache.unshift(data.ticket);
+      renderList(); updateStats();
+    }
+    if (ev === 'ticket_updated') {
+      var idx=_tkCache.findIndex(function(x){return x.id===data.ticket.id;});
+      if(idx>=0) _tkCache[idx]=data.ticket; else _tkCache.unshift(data.ticket);
+      renderList(); updateStats();
+    }
+    if (ev === 'ticket_deleted') {
+      _tkCache=_tkCache.filter(function(x){return x.id!==data.ticket_id;});
+      renderList(); updateStats();
+    }
+    if (ev === 'kicked') {
+      alert('Tu sesión fue cerrada por el administrador.'); doLogout();
+    }
+  });
+}
+
+// Patch getAllTickets to use cache when in server mode
+var _origGAT = getAllTickets;
+getAllTickets = function() {
+  if (isServerMode()) return _tkCache.length > 0 ? _tkCache : _origGAT();
+  return _origGAT();
+};
+
+// Patch saveTickets — in server mode individual ops go via API
+var _origST = saveTickets;
+saveTickets = function(tks) {
+  if (isServerMode()) { _tkCache = tks; return; }
+  _origST(tks);
+};
+
+// ── Override doLogin to check server first ────
+var _origDoLogin = doLogin;
+doLogin = async function() {
+  var srvUrl = getServerURL();
+  if (!srvUrl) { _origDoLogin(); return; }
+  var u   = (document.getElementById('l-user').value||'').trim().toLowerCase();
+  var p   = document.getElementById('l-pass').value;
+  var btn = document.getElementById('login-btn');
+  var err = document.getElementById('login-error');
+  var co  = (_selectedPortalCo && _selectedPortalCo.id) || 'me';
+  if(!u||!p){ err.textContent='Ingresa tu usuario y contraseña.'; err.classList.add('show'); return; }
+  btn.disabled=true; btn.textContent='Verificando...'; err.classList.remove('show');
+  try {
+    var data = await TicketDeskAPI.login(u, p, co, 'portal_usuarios.html');
+    if (data.success) {
+      _serverMode = true;
+      var user = data.user;
+      currentUser = {username:user.username, name:user.display_name, dept:'', company:co};
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='flex';
+      await loadTicketsFromServer();
+      setupWebSocket(user);
+      if (typeof applyPortalCoTheme === 'function' && _selectedPortalCo) applyPortalCoTheme(_selectedPortalCo);
+      renderList(); updateStats();
+      if (!botGreeted) { botGreeted=true; botWelcome(); checkAdminBotBtn(); }
+      _sActive=true; sessionStart();
+    } else {
+      btn.disabled=false; btn.textContent='Ingresar al portal';
+      err.textContent = data.error || 'Credenciales incorrectas';
+      err.classList.add('show');
+    }
+  } catch(e) {
+    // Server unavailable — fall back to local login
+    _serverMode = false;
+    btn.disabled=false; btn.textContent='Ingresar al portal';
+    _origDoLogin();
+  }
+};
+
+// Patch crearTicket to use API
+// Patch guardarTicket to use API in server mode
+var _origGuardarTk = guardarTicket;
+guardarTicket = async function() {
+  if (!isServerMode()) { _origGuardarTk(); return; }
+  // Gather form fields (reuse whatever IDs portal uses)
+  var titleEl = document.getElementById('f-titulo') || document.getElementById('new-title');
+  var catEl   = document.getElementById('f-cat')    || document.getElementById('new-cat');
+  var priEl   = document.getElementById('f-pri')    || document.getElementById('new-pri');
+  var descEl  = document.getElementById('f-desc')   || document.getElementById('new-desc');
+  var title   = titleEl ? titleEl.value.trim() : '';
+  if (!title) { _origGuardarTk(); return; }
+  try {
+    var data = await TicketDeskAPI.createTicket({
+      title:       title,
+      category:    catEl  ? catEl.value  : 'Otro',
+      priority:    priEl  ? priEl.value  : 'Media',
+      description: descEl ? descEl.value : '',
+      company_id:  (_selectedPortalCo && _selectedPortalCo.id) || 'me',
+      requester:   currentUser ? currentUser.name : 'Usuario',
+    });
+    if (data.success) {
+      _tkCache.unshift(data.ticket);
+      getAllTickets = function(){ return _tkCache; };
+      renderList(); updateStats();
+      // Close modal if open
+      var modal = document.getElementById('modal-nuevo');
+      if(modal) modal.style.display='none';
+    } else { _origGuardarTk(); }
+  } catch(e) { _origGuardarTk(); }
+};
+
+// Restore server URL on page load
+(function(){
+  var saved = getServerURL();
+  var inp = document.getElementById('srv-url-inp');
+  if (saved) {
+    TicketDeskAPI.setServer(saved);
+    if(inp) inp.value = saved;
+    setTimeout(function(){ testServerURL(saved); }, 500);
+  }
+})();
+
+// ======== SESSION TIMEOUT 15 MINUTOS ========
+var SESSION_MS   = 15 * 60 * 1000;
+var SESSION_WARN = 60;
+var _sTmr = null, _sWarn = null, _sCnt = null;
+var _sActive = false, _sLeft = SESSION_WARN;
+var _sRingLen = 213.6;
+
+function sessionStart(){
+  if(!_sActive) return;
+  sessionReset();
+  ['mousedown','mousemove','keydown','scroll','touchstart','click'].forEach(function(ev){
+    document.addEventListener(ev, sessionReset, {passive:true});
+  });
+}
+
+function sessionStop(){
+  clearTimeout(_sTmr); clearTimeout(_sWarn); clearInterval(_sCnt);
+  _sActive = false;
+}
+
+function sessionReset(){
+  if(!_sActive) return;
+  clearTimeout(_sTmr); clearTimeout(_sWarn); clearInterval(_sCnt);
+  var ov=document.getElementById('session-overlay');
+  if(ov) ov.classList.remove('open');
+  _sWarn = setTimeout(sessionShowWarn, SESSION_MS - SESSION_WARN * 1000);
+  _sTmr  = setTimeout(sessionLogout, SESSION_MS);
+}
+
+function sessionShowWarn(){
+  var ov=document.getElementById('session-overlay');
+  if(!ov) return;
+  _sLeft = SESSION_WARN;
+  sessionUpdateRing(_sLeft);
+  var sc=document.getElementById('session-secs');
+  var cd=document.getElementById('session-countdown');
+  if(sc) sc.textContent=_sLeft;
+  if(cd) cd.textContent=_sLeft;
+  ov.classList.add('open');
+  _sCnt = setInterval(function(){
+    _sLeft--;
+    var sc=document.getElementById('session-secs');
+    var cd=document.getElementById('session-countdown');
+    var rg=document.getElementById('session-ring');
+    if(sc) sc.textContent=_sLeft;
+    if(cd) cd.textContent=_sLeft;
+    sessionUpdateRing(_sLeft);
+    if(rg) rg.style.stroke=_sLeft<=10?'#c0392b':_sLeft<=20?'#b58500':'#d4500a';
+    if(_sLeft<=0){ clearInterval(_sCnt); sessionLogout(); }
+  }, 1000);
+}
+
+function sessionUpdateRing(secs){
+  var rg=document.getElementById('session-ring');
+  if(!rg) return;
+  rg.style.strokeDashoffset = _sRingLen * (1 - secs/SESSION_WARN);
+}
+
+function sessionContinue(){
+  clearInterval(_sCnt);
+  var ov=document.getElementById('session-overlay');
+  if(ov) ov.classList.remove('open');
+  sessionReset();
+}
+
+function sessionLogout(){
+  sessionStop();
+  var ov=document.getElementById('session-overlay');
+  if(ov) ov.classList.remove('open');
+  doLogout();
+  setTimeout(function(){
+    var err=document.getElementById('login-error');
+    if(err){ err.textContent='Sesion cerrada por inactividad. Inicia sesion nuevamente.'; err.classList.add('show'); }
+  }, 300);
+}
+
+// Session starts after doLogin in portal_usuarios (no applyRole here)
+// Patch doLogout to stop session
+var _origDLSession = doLogout;
+doLogout = function(){
+  sessionStop();
+  _origDLSession();
+};
+
+document.addEventListener('DOMContentLoaded',function(){
+  buildCoCards();
+  if(document.getElementById('faq-steps-list')&&!document.getElementById('faq-steps-list').children.length){addFaqStep();addFaqStep();addFaqStep();}
+  // Auto-login check
+  var saved=sessionStorage.getItem('portal_user');
+  if(saved){
+    try{
+      currentUser=JSON.parse(saved);
+      document.getElementById('u-name').textContent=currentUser.name;
+      document.getElementById('u-av').textContent=ini(currentUser.name);
+      document.getElementById('welcome-msg').textContent='Hola, '+currentUser.name.split(' ')[0]+'!';
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('portal').classList.add('active');
+      checkPushPermission();renderList();
+    }catch(e){sessionStorage.removeItem('portal_user');}
+  }
+});
+</script>
+</body>
+</html>

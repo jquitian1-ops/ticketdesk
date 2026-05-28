@@ -1,0 +1,8 @@
+node_modules/
+dist/
+function.zip
+coverage/
+.env
+.env.*
+*.log
+.DS_Store

@@ -1,0 +1,281 @@
+---
+# TicketDesk Enterprise v1.0 - Planning Wave
+# OpenSymphony Task Package Format
+
+planningWave: "ticketdesk-enterprise-implementation"
+startDate: "2026-05-27"
+endDate: "2026-06-23"
+duration: "4 weeks"
+status: "ready-for-execution"
+
+context:
+  project: "TicketDesk Enterprise v1.0"
+  description: "Agent-based implementation of candidate screening and evaluation platform"
+  stakeholders:
+    - name: "ORCHESTRATOR"
+      role: "Planning, coordination, integration"
+    - name: "ENGINEER-1"
+      role: "Backend implementation (Unit 1-4)"
+    - name: "ENGINEER-2"
+      role: "Frontend implementation (Unit 5) + DevOps"
+    - name: "QA"
+      role: "Testing, validation, security"
+    - name: "ARCHITECT"
+      role: "Design review, ADRs, validation"
+
+referenceDocs:
+  - "HARNESS-SPECIFICATION.md"
+  - "AGENTS.md"
+  - "VALIDATION-FRAMEWORK.md"
+  - "ORCHESTRATION-PLAN.md"
+  - "ESTACION-7-EXECUTION-GUIDE.md"
+
+tasksDir: "docs/tasks"
+totalTasks: 20
+
+milestones:
+  - id: "M1"
+    name: "Unit 1 + Unit 6: Auth & Compliance"
+    targetDate: "2026-05-31"
+    week: 1
+    deliverable: "v0.1.0 to staging"
+
+  - id: "M2"
+    name: "Unit 2: Session Management"
+    targetDate: "2026-06-07"
+    week: 2
+    deliverable: "v0.2.0 to staging"
+
+  - id: "M3"
+    name: "Unit 3 + Unit 4: BotEngine & Evaluation"
+    targetDate: "2026-06-16"
+    week: 3
+    deliverable: "v0.3.0 to staging"
+
+  - id: "M4"
+    name: "Unit 5 + E2E + Production"
+    targetDate: "2026-06-23"
+    week: 4
+    deliverable: "v1.0.0 to production"
+
+tasks:
+  # SPRINT 1: Unit 1 + Unit 6
+  - id: "T1.1"
+    title: "Database Schema (Unit 1)"
+    milestone: "M1"
+    priority: "critical"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 8
+    blockedBy: []
+    blocks: ["T1.2", "T1.5"]
+    parent: null
+
+  - id: "T1.2"
+    title: "User Aggregate + Repository"
+    milestone: "M1"
+    priority: "critical"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 12
+    blockedBy: ["T1.1"]
+    blocks: ["T1.3", "T1.4"]
+    parent: null
+
+  - id: "T1.3"
+    title: "Authentication Service (JWT RS256)"
+    milestone: "M1"
+    priority: "critical"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 10
+    blockedBy: ["T1.2"]
+    blocks: ["T1.4"]
+    parent: null
+
+  - id: "T1.4"
+    title: "RBAC (Role-Based Access Control)"
+    milestone: "M1"
+    priority: "high"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 8
+    blockedBy: ["T1.2", "T1.3"]
+    blocks: []
+    parent: null
+
+  - id: "T1.5"
+    title: "Unit 6: Audit Logging Framework"
+    milestone: "M1"
+    priority: "high"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 10
+    blockedBy: ["T1.1"]
+    blocks: []
+    parent: null
+
+  - id: "T1.6"
+    title: "Docker Setup + CI/CD Pipeline"
+    milestone: "M1"
+    priority: "critical"
+    assignedTo: "ENGINEER-2"
+    estimatedHours: 12
+    blockedBy: []
+    blocks: ["T2.1"]
+    parent: null
+
+  # SPRINT 2: Unit 2
+  - id: "T2.1"
+    title: "Session Schema + Migration"
+    milestone: "M2"
+    priority: "critical"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 6
+    blockedBy: ["T1.6"]
+    blocks: ["T2.2"]
+    parent: null
+
+  - id: "T2.2"
+    title: "Session Aggregate"
+    milestone: "M2"
+    priority: "critical"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 12
+    blockedBy: ["T2.1"]
+    blocks: ["T2.3"]
+    parent: null
+
+  - id: "T2.3"
+    title: "SessionRepository + Service Layer"
+    milestone: "M2"
+    priority: "critical"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 10
+    blockedBy: ["T2.2"]
+    blocks: ["T2.4"]
+    parent: null
+
+  - id: "T2.4"
+    title: "Session API Endpoints"
+    milestone: "M2"
+    priority: "critical"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 8
+    blockedBy: ["T2.3"]
+    blocks: ["T2.5"]
+    parent: null
+
+  - id: "T2.5"
+    title: "Unit 2: Comprehensive Test Suite"
+    milestone: "M2"
+    priority: "high"
+    assignedTo: "QA"
+    estimatedHours: 8
+    blockedBy: ["T2.4"]
+    blocks: []
+    parent: null
+
+  # SPRINT 3: Unit 3 + Unit 4
+  - id: "T3.1"
+    title: "BotEngine: Claude API Client"
+    milestone: "M3"
+    priority: "critical"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 10
+    blockedBy: ["T2.5"]
+    blocks: ["T3.2", "T3.4"]
+    parent: null
+
+  - id: "T3.2"
+    title: "Jailbreak Detection"
+    milestone: "M3"
+    priority: "high"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 8
+    blockedBy: ["T3.1"]
+    blocks: []
+    parent: null
+
+  - id: "T3.3"
+    title: "Evaluation Engine + Scoring"
+    milestone: "M3"
+    priority: "critical"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 12
+    blockedBy: ["T3.1"]
+    blocks: ["T3.4"]
+    parent: null
+
+  - id: "T3.4"
+    title: "Integration: Unit 2 + Unit 3 + Unit 4"
+    milestone: "M3"
+    priority: "critical"
+    assignedTo: "ENGINEER-1"
+    estimatedHours: 6
+    blockedBy: ["T3.1", "T3.3"]
+    blocks: []
+    parent: null
+
+  # SPRINT 4: Unit 5 + E2E + Prod
+  - id: "T4.1"
+    title: "Frontend Setup + Layout"
+    milestone: "M4"
+    priority: "critical"
+    assignedTo: "ENGINEER-2"
+    estimatedHours: 8
+    blockedBy: ["T3.4"]
+    blocks: ["T4.2", "T4.3"]
+    parent: null
+
+  - id: "T4.2"
+    title: "Candidate Interview Component"
+    milestone: "M4"
+    priority: "critical"
+    assignedTo: "ENGINEER-2"
+    estimatedHours: 10
+    blockedBy: ["T4.1", "T3.4"]
+    blocks: ["T4.4"]
+    parent: null
+
+  - id: "T4.3"
+    title: "Recruiter Dashboard"
+    milestone: "M4"
+    priority: "critical"
+    assignedTo: "ENGINEER-2"
+    estimatedHours: 10
+    blockedBy: ["T4.1", "T3.4"]
+    blocks: ["T4.4"]
+    parent: null
+
+  - id: "T4.4"
+    title: "E2E Testing (Playwright)"
+    milestone: "M4"
+    priority: "high"
+    assignedTo: "QA"
+    estimatedHours: 12
+    blockedBy: ["T4.2", "T4.3"]
+    blocks: ["T4.5"]
+    parent: null
+
+  - id: "T4.5"
+    title: "Production Deployment"
+    milestone: "M4"
+    priority: "critical"
+    assignedTo: "ORCHESTRATOR"
+    estimatedHours: 8
+    blockedBy: ["T4.4"]
+    blocks: []
+    parent: null
+
+summary: |
+  TicketDesk Enterprise v1.0 implementation across 4 sprints with 5 agents.
+
+  Week 1: Unit 1 (Auth) + Unit 6 (Compliance)
+  Week 2: Unit 2 (Session Management)
+  Week 3: Unit 3 (BotEngine) + Unit 4 (Evaluation)
+  Week 4: Unit 5 (Frontend) + E2E + Production
+
+  Success criteria:
+  - v1.0.0 deployed to production
+  - 150+ tests passing (>80% coverage)
+  - 0 critical security issues
+  - LGPD compliance verified
+  - WCAG 2.2 AAA accessibility
+  - Core Web Vitals met
+  - 99.5% uptime SLA configured

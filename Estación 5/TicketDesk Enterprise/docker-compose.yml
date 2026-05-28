@@ -1,0 +1,257 @@
+version: '3.9'
+
+# Docker Compose para desarrollo local TicketDesk Enterprise v1.0
+# Simula la arquitectura de producción en local sin AWS
+
+services:
+  # PostgreSQL Database (Single instance, no Multi-AZ)
+  postgres:
+    image: postgres:15.2-alpine
+    container_name: ticketdesk-postgres
+    environment:
+      POSTGRES_USER: ticketdesk_user
+      POSTGRES_PASSWORD: dev_password_123
+      POSTGRES_DB: ticketdesk
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticketdesk_user -d ticketdesk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ticketdesk-net
+
+  # Redis Cache & Pub/Sub
+  redis:
+    image: redis:7.0-alpine
+    container_name: ticketdesk-redis
+    command: redis-server --appendonly yes --requirepass redis_dev_pass_123
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ticketdesk-net
+
+  # S3 Mock (LocalStack)
+  # Para testing: archivos se guardan en /tmp/localstack
+  localstack:
+    image: localstack/localstack:latest
+    container_name: ticketdesk-s3
+    environment:
+      SERVICES: s3,kms,secretsmanager,cloudwatch,logs
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      LAMBDA_EXECUTOR: docker
+    ports:
+      - "4566:4566"  # LocalStack gateway
+      - "4571:4571"  # S3
+    volumes:
+      - localstack_data:/tmp/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - ticketdesk-net
+
+  # FastAPI Backend (Unit 2)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ticketdesk-backend
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      DATABASE_URL: postgresql://ticketdesk_user:dev_password_123@postgres:5432/ticketdesk
+      REDIS_URL: redis://:redis_dev_pass_123@redis:6379/0
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      S3_ENDPOINT_URL: http://localstack:4566
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY:-sk-test}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-prod}
+      JWT_PRIVATE_KEY_PATH: /app/secrets/jwt_private.pem
+      JWT_PUBLIC_KEY_PATH: /app/secrets/jwt_public.pem
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - ./docker/secrets:/app/secrets
+    command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - ticketdesk-net
+
+  # BotEngine Service (Unit 3)
+  botengine:
+    build:
+      context: ./botengine
+      dockerfile: Dockerfile
+    container_name: ticketdesk-botengine
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      DATABASE_URL: postgresql://ticketdesk_user:dev_password_123@postgres:5432/ticketdesk
+      REDIS_URL: redis://:redis_dev_pass_123@redis:6379/1
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY:-sk-test}
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./botengine:/app
+    command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+    networks:
+      - ticketdesk-net
+
+  # Evaluation Service (Unit 4)
+  evaluation:
+    build:
+      context: ./evaluation
+      dockerfile: Dockerfile
+    container_name: ticketdesk-evaluation
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      DATABASE_URL: postgresql://ticketdesk_user:dev_password_123@postgres:5432/ticketdesk
+      REDIS_URL: redis://:redis_dev_pass_123@redis:6379/2
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./evaluation:/app
+    command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
+    networks:
+      - ticketdesk-net
+
+  # Compliance Service (Unit 6)
+  compliance:
+    build:
+      context: ./compliance
+      dockerfile: Dockerfile
+    container_name: ticketdesk-compliance
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      DATABASE_URL: postgresql://ticketdesk_user:dev_password_123@postgres:5432/ticketdesk
+      REDIS_URL: redis://:redis_dev_pass_123@redis:6379/3
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      CLOUDWATCH_LOG_GROUP: /ticketdesk/compliance
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./compliance:/app
+    command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
+    networks:
+      - ticketdesk-net
+
+  # Celery Worker (Async tasks)
+  celery:
+    build:
+      context: ./celery
+      dockerfile: Dockerfile
+    container_name: ticketdesk-celery
+    environment:
+      ENVIRONMENT: development
+      CELERY_BROKER_URL: redis://:redis_dev_pass_123@redis:6379/4
+      CELERY_RESULT_BACKEND: redis://:redis_dev_pass_123@redis:6379/5
+      DATABASE_URL: postgresql://ticketdesk_user:dev_password_123@postgres:5432/ticketdesk
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./celery:/app
+    command: celery -A app.celery worker --loglevel=info
+    networks:
+      - ticketdesk-net
+
+  # Next.js Frontend (Unit 5)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: ticketdesk-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_BOTENGINE_URL: http://localhost:8001
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      - ticketdesk-net
+
+  # API Gateway Mock (Optional, para simular ALB)
+  # En producción es ALB real en AWS
+  nginx:
+    image: nginx:alpine
+    container_name: ticketdesk-gateway
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - botengine
+      - evaluation
+      - compliance
+      - frontend
+    networks:
+      - ticketdesk-net
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  localstack_data:
+    driver: local
+
+networks:
+  ticketdesk-net:
+    driver: bridge
+
+# Uso:
+# 1. Crear .env con variables de desarrollo
+# 2. docker-compose up -d
+# 3. docker-compose logs -f  (ver logs)
+# 4. Acceder a http://localhost (frontend vía nginx)
+# 5. Backend API: http://localhost:8000/docs (Swagger)
+# 6. docker-compose down (para)

@@ -1,0 +1,15 @@
+[
+  {
+    "username": "admin",
+    "display_name": "Administrador",
+    "department": "TI",
+    "role": "admin",
+    "email": "",
+    "salt": "7829f81968b05dbf922405bf20507b2a96641567600815518f55505fb3bf5281",
+    "password_hash": "2bf81e2fd831ea22667524ce29710a9ca0c7a3129c51fe81758b58fee1ffb140",
+    "iterations": 260000,
+    "algorithm": "pbkdf2-hmac-sha256",
+    "created": "2026-05-08T00:00:00",
+    "active": true
+  }
+]

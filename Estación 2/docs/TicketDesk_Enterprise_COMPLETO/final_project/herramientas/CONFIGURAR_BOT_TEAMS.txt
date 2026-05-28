@@ -1,0 +1,115 @@
+╔══════════════════════════════════════════════════════════════════╗
+║     TicketDesk Bot — Guía de configuración en Azure/Teams      ║
+╚══════════════════════════════════════════════════════════════════╝
+
+PASO 1 — Instalar dependencias
+──────────────────────────────────────────────────────────────────
+  pip install flask requests python-dotenv
+
+PASO 2 — Registrar el Bot en Azure
+──────────────────────────────────────────────────────────────────
+  1. Ir a portal.azure.com e iniciar sesión
+  2. Buscar "Azure Bot" → Crear
+  3. Completar:
+       Nombre del bot : TicketDesk-ME
+       Suscripción    : Tu suscripción de Azure
+       Tipo de app    : Multi-tenant (recomendado)
+  4. En "Configuration" → "Microsoft App ID" → copiar el ID
+  5. En "Configuration" → Manage → Certificates & secrets
+       → New client secret → copiar el valor generado
+  6. Guardar ambos valores:
+       MICROSOFT_APP_ID       = (el App ID copiado)
+       MICROSOFT_APP_PASSWORD = (el secret copiado)
+
+PASO 3 — Configurar el endpoint del bot
+──────────────────────────────────────────────────────────────────
+  El bot necesita una URL pública HTTPS. Opciones:
+
+  Opción A — Servidor con IP pública:
+    URL del endpoint: https://tuservidor.com/api/teams/bot
+
+  Opción B — ngrok (para pruebas locales):
+    ngrok http 3978
+    URL del endpoint: https://xxxx.ngrok.io/api/teams/bot
+
+  En Azure Bot → Configuration → Messaging endpoint:
+    Pegar la URL del endpoint
+
+PASO 4 — Agregar canal de Teams
+──────────────────────────────────────────────────────────────────
+  1. En Azure Bot → Channels → Microsoft Teams → Apply
+  2. Descargar el archivo de manifiesto (Teams App)
+  3. En Teams → Apps → Upload a custom app → subir el .zip
+  4. Agregar el bot al canal deseado
+
+PASO 5 — Configurar .env
+──────────────────────────────────────────────────────────────────
+  Agregar al archivo .env del proyecto:
+
+  MICROSOFT_APP_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  MICROSOFT_APP_PASSWORD=tu-client-secret-aqui
+  TICKETDESK_API_URL=http://localhost:5050
+  TICKETDESK_API_KEY=tu-api-key-del-env
+  BOT_PORT=3978
+
+PASO 6 — Iniciar el bot
+──────────────────────────────────────────────────────────────────
+  python teams_bot.py
+
+  Verificar que funciona:
+  curl http://localhost:3978/api/teams/bot/health
+
+PASO 7 — Probar sin Azure (modo demo)
+──────────────────────────────────────────────────────────────────
+  Si no tienes Azure aún, el bot corre en modo demo:
+
+  curl -X POST http://localhost:3978/api/teams/bot/test \
+    -H "Content-Type: application/json" \
+    -d "{\"text\": \"/ayuda\", \"sender\": \"Juan García\"}"
+
+  Otros ejemplos:
+    {"text": "/nuevo Error en SAP al facturar"}
+    {"text": "/mis"}
+    {"text": "/ver TKT-0001"}
+    {"text": "/tomar TKT-0001"}
+    {"text": "/resolver TKT-0001 Problema resuelto reiniciando servicio"}
+    {"text": "/stats"}
+    {"text": "/sla"}
+
+──────────────────────────────────────────────────────────────────
+COMANDOS DEL BOT EN TEAMS
+──────────────────────────────────────────────────────────────────
+
+  @TicketDesk /nuevo <título>           Crear ticket nuevo
+  @TicketDesk /ver TKT-0001             Ver detalle
+  @TicketDesk /mis                      Mis tickets asignados
+  @TicketDesk /pendientes               Tickets sin asignar
+  @TicketDesk /tomar TKT-0001           Tomar un ticket
+  @TicketDesk /progreso TKT-0001        Cambiar a En progreso
+  @TicketDesk /resolver TKT-0001        Marcar como resuelto
+  @TicketDesk /resolver TKT-0001 nota   Resolver con comentario
+  @TicketDesk /cerrar TKT-0001          Cerrar ticket
+  @TicketDesk /comentar TKT-0001 texto  Agregar comentario
+  @TicketDesk /buscar SAP dump          Buscar tickets
+  @TicketDesk /sla                      Tickets con SLA vencido
+  @TicketDesk /stats                    Estadísticas del día
+  @TicketDesk /ayuda                    Ver todos los comandos
+
+──────────────────────────────────────────────────────────────────
+ESTRUCTURA DE ARCHIVOS COMPLETA
+──────────────────────────────────────────────────────────────────
+
+  C:\TicketDesk\
+    ├── gestion_tickets_v2.html    ← Sistema técnicos
+    ├── portal_usuarios.html       ← Portal usuarios
+    ├── ldap_bridge.py             ← API REST principal
+    ├── teams_bot.py               ← Bot de Teams  ← NUEVO
+    ├── teams_integration.py       ← Webhooks Teams
+    ├── users.json
+    ├── .env
+    └── tickets_data.json
+
+  Iniciar todo:
+    Ventana 1: python ldap_bridge.py      (puerto 5050)
+    Ventana 2: python teams_bot.py        (puerto 3978)
+

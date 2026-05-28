@@ -1,0 +1,10 @@
+environment        = "prod"
+aws_region         = "us-east-1"
+cors_origins       = ["https://skillwall.vercel.app"]
+session_code       = "REPLACE_ME"
+lambda_memory      = 256
+lambda_timeout     = 30
+log_retention_days = 30
+
+admin_token           = "REPLACE_ME"
+new_relic_license_key = "REPLACE_ME"

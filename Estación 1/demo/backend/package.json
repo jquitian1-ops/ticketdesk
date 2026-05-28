@@ -1,0 +1,38 @@
+{
+  "name": "skillwall-backend",
+  "version": "1.0.0",
+  "description": "SkillWall Live Lambda backend (cohorte2)",
+  "private": true,
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit",
+    "package": "npm run build && cd dist && zip -q -r ../function.zip index.js && cd .."
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.659.0",
+    "@aws-sdk/client-s3": "^3.659.0",
+    "@aws-sdk/lib-dynamodb": "^3.659.0",
+    "@aws-sdk/s3-request-presigner": "^3.659.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.54.0",
+    "@opentelemetry/instrumentation-aws-sdk": "^0.45.0",
+    "@opentelemetry/instrumentation-http": "^0.54.0",
+    "@opentelemetry/resources": "^1.27.0",
+    "@opentelemetry/sdk-node": "^0.54.0",
+    "@opentelemetry/semantic-conventions": "^1.27.0",
+    "uuid": "^10.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.143",
+    "@types/jest": "^29.5.13",
+    "@types/node": "^22.7.4",
+    "@types/uuid": "^10.0.0",
+    "esbuild": "^0.24.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.6.2"
+  }
+}
