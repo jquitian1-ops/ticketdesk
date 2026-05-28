@@ -281,11 +281,22 @@ def main():
 
     # Load configurations
     print("\n📂 Loading task configurations...")
-    task_package_path = "Estación 6/docs/tasks/task-package.yaml"
-    linear_config_path = "Estación 6/docs/tasks/linear-publish.yaml"
+
+    # Support both Windows and Linux paths
+    import pathlib
+    base_path = pathlib.Path("Estación 6/docs/tasks")
+    if not base_path.exists():
+        base_path = pathlib.Path("./docs/tasks")
+
+    task_package_path = str(base_path / "task-package.yaml")
+    linear_config_path = str(base_path / "linear-publish.yaml")
 
     if not os.path.exists(task_package_path):
         print(f"❌ Task package not found: {task_package_path}")
+        print(f"Current directory: {os.getcwd()}")
+        print(f"Files in current dir: {os.listdir('.')}")
+        if os.path.exists("Estación 6"):
+            print(f"Files in 'Estación 6': {os.listdir('Estación 6')}")
         sys.exit(1)
 
     if not os.path.exists(linear_config_path):
@@ -385,8 +396,8 @@ def main():
         "issues": created_issues
     }
 
-    output_path = "Estación 6/docs/tasks/linear-publish-results.json"
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    output_path = str(base_path / "linear-publish-results.json")
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
 
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
